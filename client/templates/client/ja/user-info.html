@@ -1,0 +1,35 @@
+{% load humanize %}
+{% load mathfilters %}
+
+    <div id="user-info">
+      <header>
+        <div id="balance">
+          <h3>{{ client.wallet|add:total_stock_value|add:pending_stocks|floatformat:2|intcomma }}</h3>
+          資産総額<!--Balance-->
+        </div>
+        <div id="portfolio-total">
+          <h3>{{ total_stock_value|floatformat:2|intcomma }}</h3>
+          時価総額<!--Portfolio Total-->
+        </div>
+        <div id="recent-change">
+          <h3 id="change">---</h3>
+          <!-- <h3 id="change">+ 000.00</h3> -->
+           前日比<!--Recent Change-->
+          <script>
+            var x = document.getElementsByClassName("stock-gain");
+
+            for (i = 0; i < x.length; i++) { 
+              recentchange =  parseFloat(x[i].innerHTML) + recentchange;
+            }
+            
+            document.getElementById("change").innerHTML = recentchange;
+            
+          </script>
+           
+        </div>
+        <div id="available-trade">
+          <h3>{{ client.wallet|intcomma }}</h3>
+          買付余力<!--Available for Trade-->
+        </div>
+      </header>
+    </div>

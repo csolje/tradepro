@@ -1,0 +1,174 @@
+{% extends 'base-hq.html' %}
+{% load static %}
+
+{% block body %}
+<a href="{% url 'hq:order_list' %}" class="btn btn-info"><< Back to orders list</a>
+<br><br>
+<table id="admin">
+    <tr><th>Timestamp:</th><td>{{ order.date_created }}</td></tr>
+    <tr><th>Client:</th><td>{{ order.client }}</td></tr>
+    <tr><th>Username:</th><td>{{ order.client.user }}</td></tr>
+    <tr><th>Stock:</th><td>{{ order.stock }}</td></tr>
+    <tr><th>Method:</th><td id="method">{{ order.get_method_display }}</td></tr>
+    <tr><th>Type:</th><td id="ordertype">{{ order.get_order_type_display }}</td></tr>
+    <tr><th>Execution:</th><td id="execution-type">{{ order.get_execution_type_display }}</td></tr>
+    <tr><th>Aux Value:</th><td>{{ order.upper_limit }}</td></tr>
+    <tr><th>Expiration:</th><td>{{ order.get_expiration_display }}</td></tr>
+    <tr><th>Current Status:</th><td>{{ order.get_status_display }}</td></tr>
+    {% if order.status == 'Exe'  or order.status == 'Can' %}
+    <tr><th>Price:</th><td>{{ order.price }}</td></tr>
+    <tr><th>Units:</th><td>{{ order.units }}</td></tr>
+    <tr><th>Override:</th><td><a href="http://tradepro-mft.com/admin/client/order/{{order.id}}/change/">Override</button></a></td>
+    {% endif %}
+</table>
+{% if order.status == 'Pen' or order.status == 'Rev' or order.status == 'Par' %}
+<form action="{% url 'hq:detail' order.id %}" method="post">
+{% csrf_token %}
+{{ form.non_field_errors }}
+<div class="fieldWrapper">
+    <label for="{{ form.units.id_for_label }}">Price:</label>
+    <input id="stockprice" step="0.0001" type="number" value="0">
+</div>
+<div class="fieldWrapper">
+    {{ form.units.errors }}
+    <label for="{{ form.units.id_for_label }}">Units:</label>
+    {{ form.units }}
+</div>
+<div class="fieldWrapper">
+    {{ form.price.errors }}
+    <label for="{{ form.price.id_for_label }}">Cost:</label>
+    {{ form.price }}
+</div>
+<div class="fieldWrapper">
+    <label for="{{ form.charge.id_for_label }}">Charge:</label>
+    {{ form.charge }}
+</div>
+<div class="fieldWrapper">
+    <label for="{{ form.charge.id_for_label }}">Exec by:</label>
+    <input type="text" id="id_others" name="others" value="{{ admin }}">
+</div>
+
+    
+
+<!--<button id="id_status" name="status" class="button expanded" value="Pen" type="submit">Mark as Pending</button>-->
+
+<button id="id_status" name="status" class="button expanded" value="Pen" type="submit">Mark as Pending</button>
+<button id="id_status" name="status" class="button expanded" value="Par" type="submit">Mark as Queued</button>
+<button id="id_status" name="status" class="button expanded" value="Rev" type="submit">Mark as Processing</button>
+<button id="id_status" name="status" class="button expanded" value="Exe" type="submit">Mark as Executed</button>
+<button id="id_status" name="status" class="button expanded" value="Can" type="submit">Mark as Cancelled</button>
+
+
+
+
+<!--<select id="id_status" name="status">
+<option value="Pen">Pending</option>
+<option value="Par">Partially executed</option>
+<option value="Exe" selected="selected">Executed</option>
+<option value="Rev">Revised</option>
+<option value="Rej">Rejected</option>
+<option value="Can">Cancelled</option>
+</select>-->
+</form>
+
+<a href="{% url 'hq:order_split' order.id %}">SPLIT ORDER</a>
+
+<script>
+
+
+
+
+$( function() {
+
+    method = '{{ order.get_method_display }}';
+
+    if(method == 'Sell') {
+        console.log(method = 'sell');
+        charge = parseFloat($('#id_charge').val());
+        $('#id_charge').val(charge*(1));
+
+    } else {
+        console.log('buy');
+    }
+
+
+    totalcost = $("#id_price").val();
+    units = $("#id_units").val();
+
+    $("#stockprice").val(parseInt(totalcost)/parseInt(units));
+
+
+});
+
+$("#stockprice").keyup(function() {
+    stockgoes = $("#stockprice").val();
+    units = $("#id_units").val();
+    lastprice2 = parseFloat(stockgoes);
+    lastprice3 = (lastprice2*units);
+    commision = lastprice3*0.01;
+
+
+    if(method == 'Sell') {
+        if (commision <= 150) {
+              sellcommision = lastprice3 * 0.005;
+              lastpricewithcommision = lastprice3 - (168 + lastprice3*0.00015 + sellcommision);
+          } else {
+              lastpricewithcommision = lastprice3*0.98365;
+          }
+    } else {
+        if (commision <= 150) {
+            lastpricewithcommision = lastprice3 + 168 + lastprice3*0.00015;
+        } else {
+            lastpricewithcommision = lastprice3*1.01135;
+        }
+    }
+
+
+
+
+    $("#id_price").val(lastprice3.toFixed(2));
+
+});
+
+$("#id_units").keyup(function() {
+    stockgoes = $("#stockprice").val();
+    units = $("#id_units").val();
+    lastprice2 = parseFloat(stockgoes);
+    lastprice3 = (lastprice2*units);
+    commision = lastprice3*0.01;
+
+
+
+    if(method == 'sell') {
+        if (commision <= 150) {
+              sellcommision = lastprice3 * 0.005;
+              lastpricewithcommision = lastprice3 - (168 + lastprice3*0.00015 + sellcommision);
+          } else {
+              lastpricewithcommision = lastprice3*0.98365;
+          }
+    } else {
+        if (commision <= 150) {
+            lastpricewithcommision = lastprice3 + 168 + lastprice3*0.00015;
+        } else {
+            lastpricewithcommision = lastprice3*1.01135;
+        }
+    }
+
+    finalcomision = lastpricewithcommision-lastprice3;
+
+    $("#id_charge").val(finalcomision.toFixed(2));
+
+
+
+
+    $("#id_price").val(lastprice3.toFixed(2));
+
+});
+
+
+
+</script>
+
+
+{% endif %}
+{% endblock %}

@@ -1,0 +1,207 @@
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradePro</title>
+
+    <script src="http://code.jquery.com/jquery-3.1.1.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'client/css/foundation.css' %}">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="{% static 'client/css/app.css' %}">
+    <script src="{% static 'client/js/app.js' %}"></script>
+    <script src="https://use.fontawesome.com/0f3fca3012.js"></script>
+
+    <script src="https://use.typekit.net/ltf8pof.js"></script>
+    <script>try{Typekit.load({ async: true });}catch(e){}</script>
+
+
+    <link rel="stylesheet" href="http://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css">
+    <script src="http://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+
+        {% block head %}
+        {% endblock %}
+
+
+  </head>
+  <body>
+
+    <nav id="main-nav">
+      <div class="row">
+        <div class="large-12 small-12 columns">
+          <div class="top-bar">
+            <div class="top-bar-title">
+              <span data-responsive-toggle="responsive-menu" data-hide-for="medium">
+                <button class="menu-icon dark" type="button" data-toggle></button>
+              </span>
+              <a href="{% url 'client:index' %}" id="brand"><img src="{% static 'client/images/logow.png' %}"></a>
+            </div>
+            <div id="responsive-menu">
+              <div class="top-bar-left">
+                <ul class="dropdown menu" data-dropdown-menu>
+                  <li style="margin-right:30px;"><input type="search" placeholder="銘柄検索" size="700" id="stock-search" style="float:left; margin-right:-20px; border-radius: 0px; background:none; border:0px; box-shadow: none; border-bottom:1px #fff solid; color:#fff;"><button id="searchbutton" class="button btn btn-primary btn-sm" style="background-color: #aaa; padding: 5px 10px; color: #fff; border-radius: 0px; height: 2.4375rem; border-top-right-radius:0px; border-bottom-right-radius:0px; background:rgba(50, 105, 154, 1); border:1px rgba(50, 105, 154, 1) solid"><i class="fa fa-search" aria-hidden="true"></i></button></li>
+                  <li><a href="{% url 'client:account' %}">Karlo <i class="fa fa-cog" aria-hidden="true" style="margin-left:15px;"></i></a></li>
+                  <li><a href="{% url 'logout' %}">ログアウト</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div id="second-line">
+      <div class="row">
+        <div class="large-6 columns align-self-middle">
+          <ul>
+            <li><a href="{% url 'client:portfolio' %}" id="trade_link">ポートフォリオ</a></li>
+            <li><a href="{% url 'client:index' %}" id="market_link">株価情報</a></li>
+            <li><a href="{% url 'client:watchlist' %}" id="watchlist_link">ウォッチリスト</a></li>
+          </ul>
+        </div>
+        <div class="large-2 columns text-right">
+          <div class="user-value">{{total_stock_value|floatformat:2|intcomma}}</div>
+          <div class="user-value-label">時価総額</div>
+        </div>
+        <div class="large-2 columns text-right">
+          <div class="user-value">{{recent_change|floatformat:2|intcomma}}</div>
+          <div class="user-value-label">前日比</div>
+        </div>
+        <div class="large-2 columns text-right">
+          <div class="user-value" id="available-trade">
+          {{ client.wallet|floatformat:2|intcomma }}
+          <a href="http://jp.eagleonline.ph/add-funds/" target="_blank" style="color:#fff;"><i class="fa fa-plus-circle" aria-hidden="true"></i></a>
+          </div>
+          <div class="user-value-label">買付余力 </div>
+        </div>
+      </div>
+    </div>
+
+
+
+    {% block content %}
+    {% endblock %}
+    
+
+    <script src="{% static 'client/js/vendor/jquery.js' %}"></script>
+    <script src="{% static 'client/js/vendor/what-input.js' %}"></script>
+    <script src="{% static 'client/js/vendor/foundation.js' %}"></script>
+    <script src="{% static 'client/js/typed.js' %}"></script>
+    <script src="{% static 'client/js/app.js' %}"></script>
+
+    <script>
+      $(document).foundation();
+    </script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    
+     <script>
+    
+
+
+    
+$( function() {
+
+        $('.order-status:contains("Pending")').text('約定待ち');
+        $('.order-status:contains("Cancelled")').text('キャンセル'); 
+        $('.order-status:contains("Executed")').text('約定済み'); 
+        $('.order-status:contains("Processing")').text('処理'); 
+        $('.order-status:contains("Queued")').text('約定待ち');
+
+     var url = location.href;
+
+        var start = url.indexOf('//');
+        if (start < 0)
+            start = 0 
+        else 
+            start = start + 2;
+
+        var end = url.indexOf('/', start);
+        if (end < 0) end = url.length - start;
+
+        var baseURL = url.substring(start, end);
+
+        udfurl = location.protocol
+
+        urlp = udfurl + "//" + baseURL
+
+
+
+      $('#stock-search').bind("enterKey",function(e){
+        searchedstock = $('#stock-search').val();
+        var res = searchedstock.split(", ");
+         console.log(searchedstock);
+          tupper = res[0].toUpperCase();
+         window.location.replace(urlp+"/market/"+tupper+"/");
+
+      });
+
+      $('#searchbutton').click(function() {
+        searchedstock = $('#stock-search').val();
+        var res = searchedstock.split(", ");
+         console.log(searchedstock);
+        tupper = res[0].toUpperCase();
+         window.location.replace(urlp+"/market/"+tupper+"/");
+
+      });
+
+      $('#stock-search').keyup(function(e){
+          if(e.keyCode == 13)
+          {
+              $(this).trigger("enterKey");
+          }
+      });
+
+
+    } );
+    </script>
+
+
+
+    <script>
+    $( function() {
+    availableTags = []
+
+      $.getJSON(urlp+"/udffeed/feed", function( data ) {
+        i = 0;
+        $.each( data, function( key, val ) {
+          while (i <= val.length ){
+            current = val[i];
+            stocksymbol = current.stock;
+            
+            availableTags.push(current.stock+", "+current.stock_name)
+
+            i++
+          };
+        })
+      })
+
+    
+
+      $( "#stock-search" ).autocomplete({
+        source: availableTags
+      });
+
+
+  } );
+
+          $("#id_units").keyup(function() {
+            CalculateCost();
+          });
+
+          $("#order-price").keyup(function() {
+            CalculateCost();
+          });
+</script>
+
+
+
+  </body>
+
+
+</html>

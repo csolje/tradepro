@@ -1,0 +1,523 @@
+{% extends 'client/en/base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+
+{% block content %}
+    
+  <div class="row">
+    <div class="large-12 columns">
+      <div class="row">
+        <div class="large-12 columns stock-title">
+          <span class="stock-symbol">{{ company.symbol }}</span> - {{ company.company_name }}
+        </div>
+      </div>
+    </div>
+    <div class="large-12 columns">
+      <div class="row">
+        <div class="large-12 columns stock-details">
+          <div class="row">
+            <!-- <div class="large-2 columns" style="border-right:1px #ccc solid;">
+              <div class="stock-highlight" id="last-price-text">{{last_price|floatformat:2}}</div>
+              <div class="stock-label">Last Price</div>
+            </div> -->
+            <div class="large-2 columns" style="border-right:1px #ccc solid;">
+              <div class="stock-highlight" id="last-price-text">
+                {% if last_price <= 0.49 %}
+                {{ last_price|floatformat:4 }}
+                {% else %}
+                {{ last_price|floatformat:2 }}
+                {% endif %}
+              </div>
+              <div class="stock-label">Last Price</div>
+            </div>
+            <div class="large-2 columns" style="border-right:1px #ccc solid;">
+              <div class="stock-highlight">
+                {% if indicator == 'U' %}
+                <span class="up">
+                {% elif indicator == 'D' %}
+                <span class="down">
+                {% else %}
+                <span class="same">
+                {% endif %}
+                {{change|floatformat:2}}
+                </span>
+              </div>
+              <div class="stock-label">Change in Points</div>
+            </div>
+            <div class="large-2 columns" style="border-right:1px #ccc solid;">
+              <div class="stock-highlight">
+                {% if indicator == 'U' %}
+                <span class="up">
+                {% elif indicator == 'D' %}
+                <span class="down">
+                {% else %}
+                <span class="same">
+                {% endif %}
+                {{percent_change|floatformat:2}}
+                </span>
+              </div>
+              <div class="stock-label">Percentage Change</div>
+            </div>
+            <div class="large-2 columns" style="border-right:1px #ccc solid;">
+              <div class="stock-highlight">
+                {% if last_price <= 0.49 %}
+                {{low_price|floatformat:4}} - {{high_price|floatformat:4}}
+                {% else %}
+                {{low_price|floatformat:2}} - {{high_price|floatformat:2}}
+                {% endif %} 
+              </div>
+              <div class="stock-label">Day Range</div>
+            </div>
+            <div class="large-2 columns" style="border-right:1px #ccc solid;">
+              <div class="stock-highlight">{{latest_stock.total_volume|floatformat:0}}</div>
+              <div class="stock-label">Volume</div>
+            </div>
+            <div class="large-2 columns">
+              <div class="stock-highlight">
+                {% if last_price <= 0.49 %}
+                {{ close_price|floatformat:4 }}
+                {% else %}
+                {{ close_price|floatformat:2 }}
+                {% endif %}
+              </div>
+              <div class="stock-label">Previous Close</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="large-6 columns">
+      <div class="module">
+        <div class="module-content" id="tranasction_form">
+          <div class="large-12 columns">
+            <div id="buy-information">
+              <div id="stock-buy" class="module">
+                <div class="wrap">
+                  <form action="{% url 'client:sell' symbol %}" method="post" id="stock-form">
+                    {% csrf_token %}
+                    <div class="row">
+                      <div class="large-6 columns" style="padding-bottom: 30px;">
+                    
+                        <input id="id_method" type="hidden" name="method" value="S">
+                        <input id="id_client" type="hidden" name="client" value="{{user.client.id}}">
+                        <input id="stock" type="text" value="{{company.id}}" style="display:none;">
+                        <input id="id_stock" name="stock" type="hidden" value="{{company.id}}">
+                        <label for="id_order_type">Order Type</label>
+                        <select id="id_order_type" name="order_type" onchange="ChangeOrder();">
+                          <option value="L" selected="selected">Limit Order</option>
+                          <option value="O">Stop Order</option>
+                          <option value="C">OCO Order</option>
+                        </select>
+                        <label  class="form-dynamic v-oco" for="id_execution" style="display:none;" >If the stock goes to (profit taking)</label>
+                        <input id="others" name="others" class="form-dynamic v-oco" type="text" style="display:none;" onchange="">
+
+                        
+                        <label for="id_execution">Execution Type</label>
+                        <select id="id_execution_type" name="execution_type" onchange="ChangeExecution();">
+                          <option id="OP" class="form-dynamic v-limitorder" value="OP" selected="selected">Order Price</option>
+<!--                           <option id="MO" class="form-dynamic v-limitorder" value="MO">Market Order</option>
+ -->                          <option id="BP" class="form-dynamic v-stoporder v-oco" value="BP" style="display:none;">Best Price</option>
+                          <option id="LO" class="form-dynamic v-stoporder v-oco" value="LO" style="display:none;">Limit Order</option>
+                          <option id="WO" class="form-dynamic v-stoporder v-oco" value="WO" style="display:none;">Width Order</option>
+                        </select>
+                        <label for="stockprice" id="stockpricelabel" class="form-dynamic2 lo wo bp" style="display:none;">If the stock goes to</label>
+                        <input id="stockprice" class="form-dynamic2 lo wo bp" type="number" value="0" step="any" style="display:none;">
+                        <label for="order" class="form-dynamic2 op back-0" id="id_price_label">Order Price</label>
+                        <input id="order-price" class="form-dynamic2 op back-0" type="number" step="{{ tick_size }}" value="0">
+                        <label for="upper" class="form-dynamic2 wo" id="id_upper_limit_label" style="display:none;">Upper Limit</label>
+                        <input id="id_upper_limit" class="form-dynamic2 wo back-0" name="upper_limit" step="{{ tick_size }}" type="number" value="0" style="display:none;">
+                        <label for="units">Units</label>
+                        <input id="id_units" name="units" type="number" value="0" class="back-0">
+                        <label for="expiration" class="form-dynamic2 op bp lo wo" style="display:none;">Order Expiration</label>
+                        <select id="id_expiration" name="expiration"  onchange="ChangeExp();" class="form-dynamic2 op bp lo wo"  style="display:none;">
+                          <option value="C" selected="selected">GTC</option>
+                          <option value="D">GTD</option>
+                        </select>
+                      </div>
+                      <div class="large-6 columns">
+                        <input id="id_price" name="price" step="0.01" type="number" value="0" class="back-0" style="display:none;">
+                        <div class="expectedcost-text" style="padding-bottom:15px;">
+                          <div class="stock-highlight"><span id="stock-cost" class="costs">0</span></div>
+                          <div class="stock-label">Estimated Stock Cost</div>
+                          <hr>
+                          <div class="stock-highlight"><span id="fees" class="costs">0</span></div>
+                          <div class="stock-label">Estimated Fees and Charges</div>
+                          <hr>
+                          <div class="stock-highlight"><span id="total-cost" class="costs">0</span></div>
+                          <div class="stock-label">Estimated Total Cost</div>
+                          <hr>
+                        </div>
+                        <input id="id_charge" name="charge" type="number" style="display:none;">
+                        {% if sell %}
+                        <input onclick="formvalidate();" class="button expanded" value="Sell Stock"  disabled="disabled">
+                        {% else %}
+                        <input onclick="formvalidate();" class="button expanded" value="Buy Stock"  disabled="disabled">
+                        {% endif %}
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="large-6 columns">
+      <div class="module">
+        <div class="module-content">
+          <div class="large-12 columns stock-details" style="margin-top:15px; padding-bottom:30px; border-bottom:1px #ccc solid; ">
+            <div class="row">
+              <div class="large-4 columns" style="border-right:1px #ccc solid;">
+                  <div class="stock-highlight text-center" id="available-holdings">{{ owned_stocks.units}}</div>
+                  <div class="stock-label text-center">Available Holdings</div>
+              </div>
+              <div class="large-4 columns" style="border-right:1px #ccc solid;">
+                <div class="stock-highlight text-center" id="tick">{{ tick_size }}</div>
+                <div class="stock-label text-center">Tick Size</div>
+              </div>
+              <div class="large-4 columns">
+                <div class="stock-highlight text-center" id="lot-size-text">{{ lot_size }}</div>
+                <div class="stock-label text-center">Board Lot</div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="large-6 columns" style="margin-top:30px;">
+              <table style="background:none;" id="bidtable">
+                <tr> 
+                  <td class="stock-label text-center">Qty</td>
+                  <td class="stock-label text-center">Volume</td>
+                  <td class="stock-label text-center">Bid</td>
+                </tr>
+<!--                 {% for transaction in bid_set %}
+                <tr class="portfolio-position">
+                  <td class="table-details text-center" style="border-top:1px #eee solid;">{{transaction.qty}}</td>
+                  <td class="table-details text-center" style="border-top:1px #eee solid;">{{transaction.units}}</td>
+                  <td class="table-details text-center" style="border-top:1px #eee solid;">{{transaction.price|floatformat:2}}</td>
+                </tr>
+                {% endfor %} -->
+              </table>
+            </div>
+            <div class="large-6 columns" style="padding-top:30px;">
+              <table style="background:none;" id="asktable">
+                <tr> 
+                  <td class="stock-label text-center">Ask</td>
+                  <td class="stock-label text-center">Volume</td>
+                  <td class="stock-label text-center">Qty</td>
+                </tr>
+<!--                 {% for transaction in ask_set %}
+                <tr class="portfolio-position">
+                  <td class="table-details text-center" style="border-top:1px #eee solid;">{{transaction.price|floatformat:2}}</td>
+                  <td class="table-details text-center" style="border-top:1px #eee solid;">{{transaction.units}}</td>
+                  <td class="table-details text-center" style="border-top:1px #eee solid;">{{transaction.qty}}</td>
+                </tr>
+                {% endfor %} -->
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+          <script>
+      
+
+    $( function() {
+      setInterval(function() {   
+      
+          $.getJSON("http://api.pse.tools/api/bid-ask/{{ company.symbol }}", function( data ) {
+            $('#bidtable').html("");
+            $('#asktable').html("");
+            fulldata = data;
+            arraybid = fulldata.data
+            $.each( arraybid, function( key, val ) {
+              if (val.bid_count != null){
+               $('#bidtable').append("<tr class=\"portfolio-position\"><td class=\"table-details text-center\" style=\"border-top:1px #eee solid;\">"+ val.bid_count +"</td><td class=\"table-details text-center\" style=\"border-top:1px #eee solid;\">"+ val.bid_volume +"</td><td class=\"table-details text-center\" style=\"border-top:1px #eee solid;\">"+ val.bid_price +"</td></tr>");
+              $('#asktable').append("<tr class=\"portfolio-position\"><td class=\"table-details text-center\" style=\"border-top:1px #eee solid;\">"+ val.ask_price +"</td><td class=\"table-details text-center\" style=\"border-top:1px #eee solid;\">"+ val.ask_volume +"</td><td class=\"table-details text-center\" style=\"border-top:1px #eee solid;\">"+ val.ask_count +"</td></tr>");
+              }
+              });
+            });
+        }, 10000);
+
+    });
+
+
+      </script>
+
+
+     <script type="text/javascript">
+      $(document).ready(function(){
+          $('#transactions_table').DataTable({
+              "order": [[ 0, "desc" ]],
+              "pageLength": 10
+          });
+
+          currentstocks2 = [];
+          currentstocksprice = [];
+          currentgains = [];
+          recentchangebefore = 0;
+
+          $( ".before-stock" ).each(function() {
+            cs = $( this ).attr('id');
+            sp = $( this ).find('.stock-cost-table').text();
+            unc = $( this ).find('.stock-price-table').text();
+            ch = $( this ).find('.stock-move-table').text();
+
+            $( "." + cs).each(function() {
+              sp = sp - parseFloat($( this ).find('.today-units').text());
+            });
+
+            currentstocks2.push(cs);
+            currentstocksprice.push(sp);
+            currentgains.push((unc-(unc/((ch/100)+1)))*sp);
+            recentchangebefore = recentchangebefore + ((unc-(unc/((ch/100)+1)))*sp);
+          });
+
+          recentchangetoday = 0;
+
+          $( ".today-stock" ).each(function() {
+
+            tp = $( this ).find('.today-price-per-unit').text();
+            tp = parseFloat(tp);
+            tc = $( this ).find('.today-change').text();
+            tc = parseFloat(tc);
+            tu = $( this ).find('.today-units').text();
+            tu = parseFloat(tu);
+
+            recentchangetoday = recentchangetoday + ((tc-tp)*tu)
+
+          });
+
+
+          recentchange = recentchangebefore + recentchangetoday;
+
+          $('#change').text(recentchange.toFixed(2));
+
+          if(recentchange <= 0 ) {
+            $('#recent-change').css('background-color','#e9142d');
+          } else {
+            $('#recent-change').css('background-color','#33b575');
+          }
+
+      });
+      </script>
+
+        </div>
+      </div>
+      <script>
+
+        $( function() {
+
+          restricted = ['ATN','LC','BC','MA','MAH','CA','CPV','EIBA','FJP','FYN','IMP','KPH','OPM'];
+
+          symb = $('#sym-ref').text();
+
+          arraycheck = jQuery.inArray( symb, restricted );
+
+          if(arraycheck !== -1) {
+            $('#stock-form .button').remove();
+          }
+
+
+          ChangeOrder();
+
+/*          if(title == 'Sell') {
+              $("#limit-sell").text("ペソまでの範囲で売却する");
+              $("#order-price-below").text("ペソで売却する");
+              $("#id_upper_limit_label").text("株価下限");
+          } else {
+              $("#limit-sell").text("ペソまでの範囲で購入する");
+              $("#order-price-below").text("ペソで購入する");
+              $("#id_upper_limit_label").text("株価上限");
+          }*/
+        });
+      
+        function formvalidate() {
+
+          action = "Sell";
+          stock = $("#stock").val();
+          cost = $("#id_price").val();
+          units = $("#id_units").val();
+
+          if (action == "Buy"){
+            actiondisplay = "buying";
+          } else {
+            actiondisplay = "selling";
+          }
+
+          var r = confirm("Thank you! Please confirm your order\nStock: " +  stock + " \nUnits: " +  units + "\nCost: " + cost);
+          if (r == true) {
+              $( "#stock-form" ).submit();
+          } else {
+          }
+        }
+
+
+        
+
+
+        function ChangeOrder() {
+          var conceptName = $('#id_order_type').find(":selected").val();
+          $('.form-dynamic').css('display', 'none');
+          $('.form-dynamic').attr('disabled','disabled');
+          $('.form-dynamic2').css('display', 'none');
+          $('.costs').html('0');
+          $('#stockprice').val('0');
+
+          if (conceptName == 'O') {
+            $('.v-stoporder').css('display', 'block');
+            $('#id_execution_type').val("BP");
+            $('.v-stoporder').removeAttr('disabled');
+            ChangeExecution();
+            CalculateCost();
+          } else if (conceptName == 'C'){
+            $('.v-oco').css('display', 'block');
+            $('#id_execution_type').val("LO");
+            $('.v-oco').removeAttr('disabled');
+            CalculateCost();
+          } else {
+            $('.v-limitorder').css('display', 'block');
+            $('#id_execution_type').val("OP");
+            $('.v-limitorder').removeAttr('disabled');
+            CalculateCost();
+          }
+
+          ChangeExecution();
+        }
+
+        function ChangeExecution() {
+          var exec = $('#id_execution_type').find(":selected").val();
+          $('.form-dynamic2').css('display', 'none');
+          $('.back-0').val('0');
+          $('.costs').html('0');
+          switch(exec){
+            case 'OP':
+              $('.op').css('display', 'block');
+              $('#stockprice').val('0');
+              break;
+            case 'MO':
+              $('.mo').css('display', 'block');
+              $('#stockprice').val('0');
+              break;
+            case 'BP':
+              $('.bp').css('display', 'block');
+              break;
+            case 'LO':
+              $('.lo').css('display', 'block');
+              break;
+            case 'WO':
+              $('.wo').css('display', 'block');
+              break;
+          }
+        };
+
+        function ChangeExp() {
+          var conceptName = $('#id_expiration').find(":selected").text();
+          if (conceptName == 'GTD') {
+            $('#others').css('display', 'block');
+          } else {
+            $('#others').css('display', 'none');
+          }
+        }
+
+        function CalculateCost() {
+          var conceptName = $('#id_execution_type').find(":selected").val();
+
+          units = $("#id_units").val();
+          lastprice = $("#last-price-text").html();
+          orderprice = $("#order-price").val();
+          stockgoes = $("#stockprice").val();
+          limit = $("#id_upper_limit").val();
+
+          if(conceptName == 'MO') {
+            stockprice = lastprice;
+          } else if (conceptName == 'BP'){
+              stockprice = stockgoes;
+          } else {
+            if(conceptName == 'WO') {
+              stockprice = limit;
+            } else {
+              stockprice = orderprice;
+            }
+          }
+
+          stocklastprice = parseFloat(lastprice);
+
+          lastprice2 = parseFloat(stockprice);
+          lastprice3 = (lastprice2*units);
+          commision = lastprice3*0.01;
+          title = 'Sell'
+          tick = $('#tick').html();
+          ticktimeshundred = tick*10000000;
+          stockgoestimeshundred = stockgoes*10000000;
+          stockgoesremovedecimal = stockgoestimeshundred.toFixed(4);
+
+          orderpricetimeshundred = orderprice*10000000;
+          orderpriceremovedecimal = orderpricetimeshundred.toFixed(4);
+
+          limit = limit*10000000;
+          limit = limit.toFixed(4);
+          
+
+          if(title == 'Sell') {
+              if (commision <= 150) {
+                  sellcommision = lastprice3 * 0.005;
+                  lastpricewithcommision = lastprice3 - (168 + lastprice3*0.00024 + sellcommision);
+              } else {
+                  lastpricewithcommision = lastprice3*0.98356;
+              }
+          } else {
+              if (commision <= 150) {
+                  lastpricewithcommision = lastprice3 + 168 + lastprice3*0.00015;
+              } else {
+                  lastpricewithcommision = lastprice3*1.01135;
+              }
+          }
+
+          $('#id_price').val(lastprice3.toFixed(2));
+          $('#fees').html((lastpricewithcommision-lastprice3).toFixed(2));
+          $('#stock-cost').html(lastprice3.toFixed(2));
+          $('#total-cost').html(lastpricewithcommision.toFixed(2));
+          $('#id_charge').val((lastpricewithcommision-lastprice3).toFixed(2));
+
+          lot = $("#lot-size-text").text();
+          availablefortrade = parseFloat($("#available-trade").text().replace(/,/g, ''));
+          availableholdings = parseFloat($("#available-holdings").text().replace(/,/g, ''));
+
+          if(title == 'Sell') {
+              if(units % lot === 0 && units > 0 && units <= availableholdings && orderpriceremovedecimal % ticktimeshundred === 0 && stockgoesremovedecimal % ticktimeshundred === 0 && stockprice > stocklastprice*0.5 && stockprice < stocklastprice*1.5 && (limit*10000000) % ticktimeshundred === 0 ) {
+                $('#stock-form .button').removeAttr('disabled');
+              } else {
+                $('#stock-form .button').attr('disabled','disabled');
+              }
+          } else {
+              if(units % lot === 0 && units > 0 && lastprice2 > 0 && availablefortrade > lastpricewithcommision && orderpriceremovedecimal % ticktimeshundred === 0 && stockgoesremovedecimal % ticktimeshundred === 0 && (limit*10000000) % ticktimeshundred === 0){
+                $('#stock-form .button').removeAttr('disabled');
+              } else {
+                $('#stock-form .button').attr('disabled','disabled');
+              }
+          }
+
+
+        }
+
+        $("#id_units").keyup(function() {
+          CalculateCost();
+        });
+
+        $("#order-price").keyup(function() {
+          CalculateCost();
+        });
+
+
+
+      </script>
+
+      
+{% endblock %}

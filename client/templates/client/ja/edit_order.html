@@ -1,0 +1,388 @@
+{% extends 'client/ja/base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+
+{% block content %}
+    
+
+    <div class="row">
+      <div class="large-4 columns">
+        <div class="module">
+          <div class="module-content" id="tranasction_form">
+            <div class="large-12 columns">
+              <form action="{% url 'client:edit_order' order.id %}" method="post"  id="stock-form">
+                <h5>[{{ order.get_method_display|upper }}ING STOCK]</h5>
+                {% csrf_token %}
+                {{ form }}
+
+    <!--             <label for="id_order_type">Order type:</label>
+                <input name="order_type" id="id_order_type" value="{{ order.get_order_type_display }}">
+
+                <label for="id_execution_type">Execution type:</label>
+                <input name="execution_type" id="id_execution_type" value="{{ order.get_execution_type_display }}">
+
+                <label  for="id_units">Units:</label>
+                <input name="units" id="id_units" type="number" value="{{ order.units }}">
+
+                <input id="id_price" name="price" step="0.01" type="number" value="{{ order.price }}" class="back-0" style="display:none;">
+                <div class="expectedcost-text" style="padding-bottom:15px;">
+                  株価: <span id="stock-cost" class="costs">0</span><br>
+                  手数料など: <span id="fees" class="costs">0</span><br>
+                  合計: <span id="total-cost" class="costs">0</span><br>
+                </div>
+     -->
+                
+
+                
+    <!--             {{ order.upper_limit }}
+                {{ order.get_expiration_display }}
+                {{ order.price }}
+                {{ order.units }}
+                {{ order.get_status_display }}
+     -->
+                <button id="id_status" name="status" class="button expanded" value="Pen" type="submit">Revise Order</button>
+                <button id="id_status" name="status" class="button expanded" value="Can" type="submit">Cancel Order</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="large-8 columns">
+        <div class="row">
+          <div class="large-12 columns stock-title">
+            <span class="stock-symbol">{{ company.symbol }}</span> - {{ company.company_name }}
+          </div>
+          <div class="large-12 columns stock-details">
+            <div class="row">
+              <div class="large-4 columns" style="border-right:1px #ccc solid;">
+                <div class="stock-highlight">{{last_price|floatformat:2}}</div>
+                <div class="stock-label">Last Price</div>
+              </div>
+              <div class="large-4 columns" style="border-right:1px #ccc solid;">
+                <div class="stock-highlight">
+                  {% if indicator == 'U' %}
+                  <span class="up">
+                  {% elif indicator == 'D' %}
+                  <span class="down">
+                  {% else %}
+                  <span class="same">
+                  {% endif %}
+                  {{change|floatformat:2}}
+                  </span>
+                </div>
+                <div class="stock-label">Change in Points</div>
+              </div>
+              <div class="large-4 columns">
+                <div class="stock-highlight">
+                  {% if indicator == 'U' %}
+                  <span class="up">
+                  {% elif indicator == 'D' %}
+                  <span class="down">
+                  {% else %}
+                  <span class="same">
+                  {% endif %}
+                  {{percent_change|floatformat:2}}
+                  </span>
+                </div>
+                <div class="stock-label">Percentage Change</div>
+              </div>
+              <div class="large-4 columns" style="border-right:1px #ccc solid;">
+                <hr>
+                <div class="stock-highlight">{{low_price|floatformat:2}} - {{high_price|floatformat:2}} </div>
+                <div class="stock-label">Day Range</div>
+              </div>
+              <div class="large-4 columns" style="border-right:1px #ccc solid;">
+                <hr>
+                <div class="stock-highlight">{{latest_stock.total_volume|floatformat:0}}</div>
+                <div class="stock-label">Volume</div>
+              </div>
+              <div class="large-4 columns">
+                <hr>
+                <div class="stock-highlight">{{close_price|floatformat:2}}</div>
+                <div class="stock-label">Previous Close</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="buy-information">
+      <div id="stock-buy" class="module">
+        <div class="wrap" id="revise">
+          
+          
+        </div>
+      </div>
+    </div>
+
+    <script>
+
+      function formvalidate() {
+        CalculateCost();
+        var conceptName = $('#id_execution_type').find(":selected").val();
+
+        action = title;
+        stock = $("#stock-name h3").html();
+        price = $("#order-price").val();
+          limit = $("#id_upper_limit").val();
+          best = $('#stockprice').val();
+
+          if(conceptName == 'MO') {
+            price = price;
+          } else if (conceptName == 'BP'){
+              price = best;
+          } else {
+            if(conceptName == 'WO') {
+              price = limit;
+            } else {
+              price = price;
+            }
+          }
+
+        cost = price;
+        units = $("#id_units").val();
+
+        if (action == "Buy"){
+          actiondisplay = "buying";
+        } else {
+          actiondisplay = "selling";
+        }
+
+        var r = confirm("Thank you! 以下の内容で注文します。\n会社名: " +  stock + " \n株数: " +  units + "\n入札価格: " + cost);
+        if (r == true) {
+            $( "#stock-form" ).submit();
+        } else {
+          return false;
+        }
+      }
+
+
+      $( document ).ready(function() {
+
+          
+
+          
+
+          $("label[for='id_units']").html('株数');
+          $('#id_status').css('display','none');
+          $('label[for=id_status]').css('display','none');
+          $('#id_others').css('display','none');
+          $('label[for=id_others]').css('display','none');
+          $('#id_price').css('display','none');
+          $('label[for=id_price]').css('display','none');
+          $('#id_upper_limit').css('display','none');
+          $('label[for=id_upper_limit]').css('display','none');
+          $('#id_order_type').css('display','none');
+          $('#id_execution_type').css('display','none');
+          $('label[for=id_charge]').css('display','none');
+          $('#id_charge').css('display','none');
+
+
+          var ord = $('#id_order_type').find(":selected").val();
+          if(ord == 'L') {
+            $("label[for='id_order_type']").html("注文の種類: 指値注文");
+          } else {
+            $("label[for='id_order_type']").html("注文の種類: 逆指値注文");
+          }
+
+          $("#id_price").after("<label for=\"order-price\">注文株価</label><input id=\"order-price\" type=\"number\" step=\"0.0001\" value=\"0\">");
+          $("#id_execution_type").after("<label for=\"stockprice\" id=\"stockpricelabel\" style=\"display:none;\">もし株価が〜ペソになったら</label><input id=\"stockprice\" type=\"number\" value=\"0\" step=\"any\" style=\"display:none;\">");
+
+          title = $('#order_method').html();
+
+          if(title == 'Sell') {
+              $("label[for=id_upper_limit]").text("下限");
+              $("label[for=stockprice]").text("もし株価が〜ペソ以下になったら");
+          } else {
+              $("label[for=id_upper_limit]").text("上限");
+              $("label[for=stockprice]").text("もし株価が〜ペソ以上になったら");
+          }
+
+
+          var exec = $('#id_execution_type').find(":selected").val();
+
+          $('#upper_limit').css('display','none');
+          $('label[for=upper_limit]').css('display','none');
+          $('#order-price').css('display','none');
+          $('label[for=order-price]').css('display','none');
+
+          totalcost = $("#id_price").val();
+          units = $("#id_units").val();
+
+          $("#order-price").val(parseInt(totalcost)/parseInt(units).toFixed(2));
+
+          price = parseFloat($('#order-price').val()).toFixed(2);
+          $('#order-price').val(price);
+
+          $('#stockprice').val(price);
+
+
+          switch(exec){
+            case 'OP':
+              $("label[for='id_execution_type']").html("注文実行の種類: 注文株価");
+              $('#order-price').css('display', 'block');
+              $('label[for="order-price"]').css('display', 'block');
+              break;
+            case 'MO':
+              $("label[for='id_execution_type']").html("注文実行の種類: 成行注文");
+              $('.mo').css('display', 'block');
+              break;
+            case 'BP':
+              $("label[for='id_execution_type']").html("注文実行の種類: 成行注文");
+              $('label[for="stockprice"]').css('display', 'block');
+              $('#stockprice').css('display', 'block');
+              break;
+            case 'LO':
+              $("label[for='id_execution_type']").html("注文実行の種類: 指値注文");
+              $('#order-price').css('display', 'block');
+              $('label[for="order-price"]').css('display', 'block');
+              $('label[for="stockprice"]').css('display', 'block');
+              $('#stockprice').css('display', 'block');
+              break;
+            case 'WO':
+              $("label[for='id_execution_type']").html("注文実行の種類: 値幅注文");
+              $('#id_upper_limit').css('display','block');
+              $('label[for="id_upper_limit"]').css('display','block');
+              $('label[for="stockprice"]').css('display', 'block');
+              $('#stockprice').css('display', 'block');
+              break;
+          }
+      });
+
+      function CalculateCost() {
+          var conceptName = $('#id_execution_type').find(":selected").val();
+
+          units = $("#id_units").val();
+          price = $("#order-price").val();
+          limit = $("#id_upper_limit").val();
+          best = $('#stockprice').val();
+
+          if(conceptName == 'MO') {
+            price = price;
+          } else if (conceptName == 'BP'){
+              price = best;
+          } else {
+            if(conceptName == 'WO') {
+              price = limit;
+            } else {
+              price = price;
+            }
+          }
+
+
+          lastprice2 = parseFloat(price);
+          lastprice3 = (lastprice2*units);
+          commision = lastprice3*0.01;
+          title = $('#action').html();
+          
+
+          if(title == 'Sell') {
+              if (commision <= 150) {
+                  sellcommision = lastprice3 * 0.005;
+                  lastpricewithcommision = lastprice3 - (168 + lastprice3*0.00015 + sellcommision);
+              } else {
+                  lastpricewithcommision = lastprice3*0.98365;
+              }
+          } else {
+              if (commision <= 150) {
+                  lastpricewithcommision = lastprice3 + 168 + lastprice3*0.00015;
+              } else {
+                  lastpricewithcommision = lastprice3*1.01135;
+              }
+          }
+
+          $('#id_price').val(lastprice3.toFixed(2));
+
+          lot = $("#lot-size-text").text();
+          lot = parseFloat(lot);
+
+          if(units % lot === 0 && units > 0){
+            $('#stock-form .revise').removeAttr('disabled');
+          } else {
+            $('#stock-form .revise').attr('disabled','disabled');
+          }
+
+
+        }
+
+      $("#id_units").keyup(function() {
+        CalculateCost();
+      });
+
+      $("#order-price").keyup(function() {
+        CalculateCost();
+      });
+
+          
+    </script>
+
+   <!--  <script>
+      function CalculateCost() {
+        var conceptName = $('#id_execution_type').val();
+
+        units = $("#id_units").val();
+        lastprice = $("#last-price-text").html();
+        orderprice = $("#order-price").val();
+        stockgoes = $("#stockprice").val();
+
+        if(conceptName == 'MO') {
+          stockprice = lastprice;
+        } else if (conceptName == 'BP'){
+            stockprice = stockgoes;
+        } else {
+            stockprice = orderprice;
+        }
+
+        lastprice2 = parseFloat(stockprice);
+        lastprice3 = (lastprice2*units);
+        commision = lastprice3*0.01;
+        title = $('#action').html();
+        
+
+        if(title == 'Sell') {
+            if (commision <= 150) {
+                sellcommision = lastprice3 * 0.005;
+                lastpricewithcommision = lastprice3 - (168 + lastprice3*0.00015 + sellcommision);
+            } else {
+                lastpricewithcommision = lastprice3*0.98365;
+            }
+        } else {
+            if (commision <= 150) {
+                lastpricewithcommision = lastprice3 + 168 + lastprice3*0.00015;
+            } else {
+                lastpricewithcommision = lastprice3*1.01135;
+            }
+        }
+
+        $('#id_price').val(lastpricewithcommision.toFixed(2));
+        $('#fees').html((lastpricewithcommision-lastprice3).toFixed(2));
+        $('#stock-cost').html(lastprice3.toFixed(2));
+        $('#total-cost').html(lastpricewithcommision.toFixed(2));
+
+        lot = $("#lot-size-text").text();
+
+        if(units % lot === 0 && units > 0){
+          $('#stock-form .button').removeAttr('disabled');
+        } else {
+          $('#stock-form .button').attr('disabled','disabled');
+        }
+
+      }
+
+      $("#id_units").keyup(function() {
+        CalculateCost();
+      });
+
+      $("#order-price").keyup(function() {
+        CalculateCost();
+      });
+
+    </script> -->
+
+
+
+
+{% endblock %}

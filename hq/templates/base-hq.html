@@ -1,0 +1,111 @@
+<html>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/united/bootstrap.min.css">
+        <script type="text/javascript" src="https://raw.githubusercontent.com/flouthoc/blinkTitle.js/master/index.js"></script>
+
+        {% block head %}
+        {% endblock %}
+
+    </head>
+    <body>
+        <nav class="navbar navbar-default">
+          <div class="container-fluid">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="#">Trade Pro Admin</a>
+            </div>
+
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+              <ul class="nav navbar-nav">
+                <li><a href="{% url 'hq:order_list' %}">Orders</a></li>
+                <li><a href="{% url 'hq:clients' %}">Clients</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Order Filters <span class="caret"></span></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="{% url 'hq:order_list' %}/filter/OP/">Order Price</a></li>
+                    <li><a href="{% url 'hq:order_list' %}/filter/MO/">Market Order</a></li>
+                    <li><a href="{% url 'hq:order_list' %}/filter/LO/">Limit Order</a></li>
+                    <li><a href="{% url 'hq:order_list' %}/filter/BP/">Best Price</a></li>
+                    <li><a href="{% url 'hq:order_list' %}/filter/WO/">Width Order</a></li>
+                    <li><a href="{% url 'hq:order_list' %}/status/Pen/">Pending</a></li>
+                    <li><a href="{% url 'hq:order_list' %}/status/Par/">Queued</a></li>
+                    <li><a href="{% url 'hq:order_list' %}/status/Rev/">Processing</a></li>
+                    <li><a href="{% url 'hq:order_list' %}/status/Exe/">Executed</a></li>
+                    <li><a href="{% url 'hq:order_list' %}/status/Can/">Cancelled</a></li>
+                  </ul>
+                </li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Change Market Status<span class="caret"></span></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="http://tradepro-mft.com/hq/change_market_status/?status=Pre-Open">Pre Open</a></li>
+                    <li><a href="http://tradepro-mft.com/hq/change_market_status/?status=Market Open">Market Open</a></li>
+                    <li><a href="http://tradepro-mft.com/hq/change_market_status/?status=Recess">Recess</a></li>
+                    <li><a href="http://tradepro-mft.com/hq/change_market_status/?status=Pre Close">Pre Close</a></li>
+                    <li><a href="http://tradepro-mft.com/hq/change_market_status/?status=Market Close">Market Close</a></li>
+                  </ul>
+                </li>
+              </ul>
+              <ul class="nav navbar-nav navbar-right">
+                <li><a href="http://172.104.167.62/logout">Logout</a></li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+
+
+        
+
+        <div class="container">
+
+        <div id="alerts"></div>
+
+        <script>
+
+            $.getJSON( "http://tradepro-mft.com/hq/notifications/", function( data ) {
+
+                fulldata = data;
+                notificationarray = fulldata.array
+              
+                $.each( notificationarray, function( key, val ) {
+                   $('#alerts').append("<div id=\"notifications\" class=\"alert alert-danger alert-dismissible\" role=\"alert\"><button type=\"button\" onclick=\"dismiss(" + val.id + ")\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>" + val.message + " | <a href=\"http://tradepro-mft.com/hq/orders/"+ val.order_id + "\" target=\"_blank\">VIEW ORDER</a></div>");
+                });
+            });
+
+            
+
+            setInterval(function() {
+
+                $('#alerts').html("");
+
+                $.getJSON( "http://tradepro-mft.com/hq/notifications/", function( data ) {
+
+                    fulldata = data;
+                    notificationarray = fulldata.array
+                  
+                    $.each( notificationarray, function( key, val ) {
+                       $('#alerts').append("<div id=\"notifications\" class=\"alert alert-danger alert-dismissible\" role=\"alert\"><button type=\"button\" onclick=\"dismiss(" + val.id + ")\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>" + val.message + " | <a href=\"http://tradepro-mft.com/hq/orders/"+ val.order_id + "\" target=\"_blank\">VIEW ORDER</a></div>");
+                    });
+                });
+            }, 10000);
+
+            function dismiss(id) {
+                $.post("http://tradepro-mft.com/hq/dismissnotifications/?id="+id);
+            }
+
+        </script>
+
+        {% block body %}
+        {% endblock %}
+        </div>
+
+     
+
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    </body>
+</html>

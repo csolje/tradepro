@@ -1,0 +1,82 @@
+{% extends 'base-hq.html' %}
+{% load static %}
+{% load mathfilters %}
+
+{% block head %}
+<link rel="stylesheet" href="http://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css">
+<script src="http://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+    $('#ordersTable').DataTable({
+        "order": [[ 0, "desc" ]],
+        "pageLength": 20
+    });
+    console.log('lalala');
+});
+</script>
+{% endblock %}
+
+{% block body %}
+<table id="ordersTable">
+    <thead>
+        <tr>
+            <th>Requested</th>
+            <th>User ID</th>
+            <th>Client</th>
+            <th>Method</th>
+            <th>Type - Execution</th>
+            <th>Stock Symbol</th>
+            <th>Percentage</th>
+            <th>Units</th>
+            <th>Price</th>
+            <th>Status</th>
+            <th>Exp</th>
+            <th>Exec by</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+        <tr class="{{ order.order_type }}" style="background:rgba(255, {{ order.yellow|floatformat:0 }}, 0, {{ order.red }});">
+            <td>{{order.id|stringformat:"04d" }} {{order.date_created}}</td>
+            <td>{{ order.client.user }} ({{order.client.wallet}})</td>
+            <td>{{order.client}}</td>
+            <td>{{order.get_method_display}}</td>
+            <td>
+                {% if order.order_type = 'O' %}
+                S | {{ order.execution_type }}
+                {% else %}
+                L | {{ order.execution_type }}
+                {% endif %}
+            </td>
+            <td>{{order.stock.company.symbol}}</td>
+            <td>{{ order.percent|floatformat:2|abs }}</td>
+            <td>{{order.units}}</td>
+            <td>
+                {% if order.method = 'B' %}
+                    {% if order.execution_type = 'WO' %}
+                    {{order.price|div:order.units}} - {{order.upper_limit}}
+                    {% else %}
+                    {{order.price|div:order.units}}
+                    {% endif %}
+                {% else %}
+                    {% if order.execution_type = 'WO' %}
+                    {{order.upper_limit}} - {{order.price|div:order.units}}
+                    {% else %}
+                    {{order.price|div:order.units}}
+                    {% endif %}
+                {% endif %}
+            </td>
+            <td>
+                {% if order.status = 'Pen' or order.status = 'Rev' or order.status = 'Par' %}
+                <a href="{% url 'hq:detail' order.id %}" class="btn btn-primary btn-sm">{{order.get_status_display}}</a>
+                {% else %}
+                <a href="{% url 'hq:detail' order.id %}" class="btn btn-secondary btn-sm">{{order.get_status_display}}</a>
+                {% endif %}
+            </td>
+            <td>{{order.expiration}}</td>
+            <td>{{order.others}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

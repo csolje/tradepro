@@ -1,0 +1,9 @@
+env
+venv
+*.pyc
+db.sqlite3
+**/migrations
+**/local_settings.py
+logs/*
+.idea/*
+historical_prices/*

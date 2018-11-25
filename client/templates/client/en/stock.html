@@ -1,0 +1,190 @@
+{% extends 'client/en/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script>window.jQuery || document.write('<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"><\/script>')</script>
+    <script type="text/javascript" src="{% static 'charting_library.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'datafeed/udf/datafeed.js' %}"></script>
+   
+
+    <div class="row">
+      <div class="large-12 columns">
+        <div class="row">
+          <div class="large-8 columns stock-title">
+            <span class="stock-symbol">{{ company.symbol }}</span> - {{ company.company_name }}
+          </div>
+          <div class="large-4 columns stock-title text-right">
+            {% if company in user.client.watchlist.all %}
+            <form action="{% url 'client:stock' symbol %}" method="post" style="display:inline">
+              {% csrf_token %}
+              <button id="id_add" name="add" class="button" value="0" type="submit">Remove from Watchlist</button>
+            </form>
+            {% else %}
+            <form action="{% url 'client:stock' symbol %}" method="post" style="display:inline">
+              {% csrf_token %}
+              <button id="id_add" name="add" class="button" value="1" type="submit">Add to Watchlist<!-- Add to Watchlist --></button>
+            </form>
+            {% endif%}
+            {% if company.security_status == 'S' %}
+            <a href="#" class="button" disabled="disabled">Disabled</a>
+            {% else %}
+            <a href="{% url 'client:buy' symbol %}" class="button">Buy Stocks</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="large-12 columns">
+        <div class="row">
+          <div class="large-12 columns stock-details">
+            <div class="row">
+              <div class="large-2 columns" style="border-right:1px #ccc solid;">
+                <div class="stock-highlight">
+                  {% if last_price <= 0.49 %}
+                  {{ last_price|floatformat:4 }}
+                  {% else %}
+                  {{ last_price|floatformat:2 }}
+                  {% endif %}
+                </div>
+                <div class="stock-label">Last Price</div>
+              </div>
+              <div class="large-2 columns" style="border-right:1px #ccc solid;">
+                <div class="stock-highlight">
+                  {% if indicator == 'U' %}
+                  <span class="up">
+                  {% elif indicator == 'D' %}
+                  <span class="down">
+                  {% else %}
+                  <span class="same">
+                  {% endif %}
+                  {{change|floatformat:2}}
+                  </span>
+                </div>
+                <div class="stock-label">Change in Points</div>
+              </div>
+              <div class="large-2 columns" style="border-right:1px #ccc solid;">
+                <div class="stock-highlight">
+                  {% if indicator == 'U' %}
+                  <span class="up">
+                  {% elif indicator == 'D' %}
+                  <span class="down">
+                  {% else %}
+                  <span class="same">
+                  {% endif %}
+                  {{percent_change|floatformat:2}}
+                  </span>
+                </div>
+                <div class="stock-label">Percentage Change</div>
+              </div>
+              <div class="large-2 columns" style="border-right:1px #ccc solid;">
+                <div class="stock-highlight">
+                  {% if last_price <= 0.49 %}
+                  {{low_price|floatformat:4}} - {{high_price|floatformat:4}}
+                  {% else %}
+                  {{low_price|floatformat:2}} - {{high_price|floatformat:2}}
+                  {% endif %} 
+                </div>
+                <div class="stock-label">Day Range</div>
+              </div>
+              <div class="large-2 columns" style="border-right:1px #ccc solid;">
+                <div class="stock-highlight">{{latest_stock.total_volume|floatformat:0}}</div>
+                <div class="stock-label">Volume</div>
+              </div>
+              <div class="large-2 columns">
+                <div class="stock-highlight">
+                  {% if last_price <= 0.49 %}
+                  {{ close_price|floatformat:4 }}
+                  {% else %}
+                  {{ close_price|floatformat:2 }}
+                  {% endif %}
+                </div>
+                <div class="stock-label">Previous Close</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" id="chart">
+      <div class="large-12 columns" style="height:70vh">
+        <div id="tv_chart_container" style="height:100%; width:100%;"></div>
+      </div>
+    </div>
+<script type="text/javascript">
+
+
+
+
+
+  
+
+        TradingView.onready(function () {
+
+        var url = location.href;
+
+        var start = url.indexOf('//');
+        if (start < 0)
+            start = 0 
+        else 
+            start = start + 2;
+
+        var end = url.indexOf('/', start);
+        if (end < 0) end = url.length - start;
+
+        var baseURL = url.substring(start, end);
+
+        udfurl = location.protocol + "//"+baseURL + "/udffeed"
+
+          widget = new TradingView.widget({
+            symbol: "{{ company.symbol }}",
+            interval: 'D',
+            container_id: "tv_chart_container",
+            datafeed: new Datafeeds.UDFCompatibleDatafeed(udfurl, 10000),
+            library_path: /static/,
+            locale: "en",
+            timezone: "Asia/Singapore",
+            debug: true,
+            client_id: 'roi.com',
+            disabled_features: ["header_fullscreen_button", "header_symbol_search"],
+
+            
+                charts_storage_url: 'http://139.162.50.63',
+                user_id: '{{ request.user.username }}',
+            
+
+            width: '100%',
+            height: '100%',
+
+            drawings_access: { type: 'black', tools: [ { name: "Regression Trend" } ] },
+          });
+
+          widget.onChartReady(function () {
+
+            //setTimeout(initChart, 0);
+            initChart();
+          });
+
+          function initChart() {
+             widget.createButton()
+                .attr('title', "Full Screen")
+                .on('click', function (e) { toggleFullScreenTradingViewChart(); })
+                .append($('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 586.09999 586.09996" width="18" height="14" enable-background="new 0 0 595.3 841.9"><path d="M172.6 367.9l-97.7 97.7L0 390.7v195.4h195.4l-74.9-74.9 97.7-97.7-45.6-45.6zM195.4 0H0v195.4l74.9-74.9 97.7 97.7 45.6-45.6-97.7-97.7L195.4 0zm195.3 0l74.9 74.9-97.7 97.7 45.6 45.6 97.7-97.7 74.9 74.9V0H390.7zm22.8 367.9l-45.6 45.6 97.7 97.7-74.9 74.9h195.4V390.7l-74.9 74.9-97.7-97.7z"></path><svg>'));
+          };
+
+           function toggleFullScreenTradingViewChart() {
+            $('#tv_chart_container').toggleFullScreen();
+          };
+
+           function d(c){var b,a;if(!this.length)return this;b=this[0];b.ownerDocument?a=b.ownerDocument:(a=b,b=a.documentElement);if(null==c){if(!a.exitFullscreen&&!a.webkitExitFullscreen&&!a.webkitCancelFullScreen&&!a.msExitFullscreen&&!a.mozCancelFullScreen)return null;c=!!a.fullscreenElement||!!a.msFullscreenElement||!!a.webkitIsFullScreen||!!a.mozFullScreen;return!c?c:a.fullscreenElement||a.webkitFullscreenElement||a.webkitCurrentFullScreenElement||a.msFullscreenElement||a.mozFullScreenElement||c}c?(c=
+b.requestFullscreen||b.webkitRequestFullscreen||b.webkitRequestFullScreen||b.msRequestFullscreen||b.mozRequestFullScreen)&&c.call(b):(c=a.exitFullscreen||a.webkitExitFullscreen||a.webkitCancelFullScreen||a.msExitFullscreen||a.mozCancelFullScreen)&&c.call(a);return this}jQuery.fn.fullScreen=d;jQuery.fn.toggleFullScreen=function(){return d.call(this,!d.call(this))};var e,f,g;e=document;
+e.webkitCancelFullScreen?(f="webkitfullscreenchange",g="webkitfullscreenerror"):e.msExitFullscreen?(f="MSFullscreenChange",g="MSFullscreenError"):e.mozCancelFullScreen?(f="mozfullscreenchange",g="mozfullscreenerror"):(f="fullscreenchange",g="fullscreenerror");jQuery(document).bind(f,function(){jQuery(document).trigger(new jQuery.Event("fullscreenchange"))});jQuery(document).bind(g,function(){jQuery(document).trigger(new jQuery.Event("fullscreenerror"))});
+        });
+
+
+
+
+    </script>
+
+{% endblock %}

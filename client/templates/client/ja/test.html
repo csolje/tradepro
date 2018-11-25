@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+
+
+{% block content %}
+    {% include 'user-info.html' %}
+
+    <script type="text/javascript">
+    $(document).ready(function(){
+
+        portfoliototal = parseFloat($("#portfolio-total h3").text().replace(/,/g, ''));
+        totalcost=0;
+        $('.portfolio-cost-table').each(function(){
+            x = parseFloat($(this).text().replace(/,/g, ''));
+            totalcost = totalcost + x;
+        });
+
+        unrealized = portfoliototal - totalcost
+        unrealizedchange = (((portfoliototal - totalcost)/totalcost)*100).toFixed(2);
+
+        $('#table_portfolio').DataTable({
+            "order": [[ 0, "desc" ]],
+            "pageLength": 10
+        });
+        
+        $( "#table_portfolio tbody" ).after( "<tfoot><td class=\"stock-name-table sorting_1\"></td><td class=\"stock-holding-table\"></td><td class=\"stock-sell-table\"></td><td class=\"stock-cost-table portfolio-cost-table\">"+ commaSeparateNumber(totalcost) +"</td><td class=\"stock-price-table\"><span class=\"stock-gain\" style=\"display:none;\"></span></td><td class=\"stock-value-table portfolio-value-table\">"+ commaSeparateNumber(portfoliototal) +"</td><td class=\"stock-profit-table portfolio-profit-table\">"+ commaSeparateNumber(unrealized.toFixed(2)) +"</td><td class=\"stock-change-table\">" + unrealizedchange + "%</td><td class=\"stock-move-table\"></td><td class=\"stock-sell-table\"></td></tfoot>" );
+
+    });
+
+
+    </script>
+
+    
+
+    <div id="portfolio" class="module">
+      <header>
+        ポートフォリオ<!--Portfolio-->
+      </header>
+      <div id="for-mobile">
+        {% for key, value in portfolio.items %}
+          <div class="stock">
+            <h3><a href="{% url 'client:stock' key.symbol %}">{{ key }}</a></h3>
+            <h4>{{ value.units }} 株数,  {{value.last_price|floatformat:2}} | {% if value.percent_close > 0 %}
+              <span class="pos">
+              {% elif value.percent_close < 0 %}
+              <span class="neg">
+              {% else %}
+              <span class="nomove">
+              {% endif %}
+                {{ value.percent_close|floatformat:2}}%
+              </span> | <a href="{% url 'client:sell' key.symbol %}">Sell</a></h4>
+          </div>
+        {% endfor %}
+      </div>
+      <table id="table_portfolio" class="compact">
+        <thead>
+          <tr>
+            <th class="stock-name-table">会社名<!--Stock Name--></th>
+            <th class="stock-holding-table">株数 <!-- Holding --></th>
+            <th class="stock-sell-table">平均購入株価<!-- Average Price --></th>
+            <th class="stock-cost-table">購入額<!-- Cost --></th>
+            <th class="stock-price-table">現在の株価<!-- Market Price --></th>
+            <th class="stock-value-table">時価総額<!-- Value --></th>
+            <th class="stock-profit-table">損益<!-- Profit --></th>
+            <th class="stock-change-table">損益（％）<!-- Change --></th>
+            <th class="stock-move-table">前日比<!-- Change for Day --></th>
+            <th class="stock-sell-table">売却</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for key, value in portfolio.items %}
+          <tr>
+            <td class="stock-name-table"><a href="{% url 'client:stock' key.symbol %}">{{ key }}</a></td>
+            <td class="stock-holding-table">{{ value.units }}</td>
+            <td class="stock-sell-table">
+              {% if value.price|div:value.units >= 1 %}
+              {{ value.price|div:value.units|floatformat:2 }}
+              {% else %}
+              {{ value.price|div:value.units|floatformat:4 }}
+              {% endif %}
+            </td>
+            <td class="stock-cost-table portfolio-cost-table">{{ value.price|intcomma }}</td>
+            <td class="stock-price-table">
+              {% if value.last_price >= 0.5 %}
+              {{value.last_price|floatformat:2}} 
+              {% else %}
+              {{value.last_price|floatformat:4}} 
+              {% endif %}
+              <span class="stock-gain" style="display:none;">{{value.last_price|mul:value.percent_change|div:100|mul:value.units|floatformat:2}}</span>
+            </td>
+            
+            <td class="stock-value-table portfolio-value-table">{{ value.last_price|mul:value.units|floatformat:2|intcomma }}</td>
+            <td class="stock-profit-table portfolio-profit-table">
+              {% if value.last_price|mul:value.units|sub:value.price > 0 %}
+              <span class="pos">
+              {% elif value.last_price|mul:value.units|sub:value.price < 0 %}
+              <span class="neg">
+              {% else %}
+              <span class="nomove">
+              {% endif %}
+                {{ value.last_price|mul:value.units|sub:value.price|floatformat:2 }}
+              </span>
+            </td>
+            <td class="stock-change-table">
+              {% if value.last_price|mul:value.units|sub:value.price|div:value.price > 0 %}
+              <span class="pos">
+              {% elif value.last_price|mul:value.units|sub:value.price < 0 %}
+              <span class="neg">
+              {% else %}
+              <span class="nomove">
+              {% endif %}
+                {{ value.last_price|mul:value.units|sub:value.price|div:value.price|mul:100|floatformat:2 }}%
+              </span></td>
+
+            <td class="stock-move-table">
+              {% if value.change > 0 %}
+              <span class="pos">
+              {% elif value.change < 0 %}
+              <span class="neg">
+              {% else %}
+              <span class="nomove">
+              {% endif %}
+                {{ value.percent_change|floatformat:2}}%
+              </span>
+            </td>
+            <td class="stock-sell-table"><a href="{% url 'client:sell' key.symbol %}">売却</a></div>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+  {% for key, value in portfolio.items %}
+    <div class="before-stock" id="{{key.symbol}}" style="display:none;">
+      <div class="stock-cost-table">{{ value.units }}</div>
+      <div class="stock-move-table">{{ value.change }}</div>
+    </div>
+  {% endfor %}
+
+      
+  {% for transaction in today_transactions %}
+    <div class="today-stock" style="display:none;">
+      
+        <div class="{{ transaction.stock.company.symbol }}">
+          <div class="today-method">{{ transaction.get_method_display }}</div>
+          <div class="today-price">{{ transaction.price }}</div>
+          <div class="today-units">{{ transaction.units }}</div>
+          <div class="today-price-per-unit">{{ transaction.price|div:transaction.units|floatformat:2 }}</div>
+          <div class="today-change">{{transaction.stock.company.stockdetail_set.last.last_traded_price|floatformat:2}}</div>
+        </div>
+     
+    </div>
+ {% endfor %}
+
+      <script type="text/javascript">
+
+      function commaSeparateNumber(val){
+        while (/(\d+)(\d{3})/.test(val.toString())){
+          val = val.toString().replace(/(\d+)(\d{3})/, '$1'+','+'$2');
+        }
+        return val;
+      }
+
+
+
+      $(document).ready(function(){
+          $('#transactions_table').DataTable({
+              "order": [[ 1, "desc" ]],
+              "pageLength": 10
+          });
+
+          currentstocks2 = [];
+          currentstocksprice = [];
+          currentgains = [];
+          recentchangebefore = 0;
+
+          $( ".before-stock" ).each(function() {
+            cs = $( this ).attr('id');
+            sp = $( this ).find('.stock-cost-table').text();
+            ch = $( this ).find('.stock-move-table').text();
+
+            $( "." + cs).each(function() {
+              sp = sp - parseFloat($( this ).find('.today-price').text());
+            });
+
+            currentstocks2.push(cs);
+            currentstocksprice.push(sp);
+            currentgains.push(sp*ch);
+            recentchangebefore = recentchangebefore + (sp*ch);
+          });
+
+          recentchangetoday = 0;
+
+          $( ".today-stock" ).each(function() {
+
+            tp = $( this ).find('.today-price-per-unit').text();
+            tp = parseFloat(tp);
+            tc = $( this ).find('.today-change').text();
+            tc = parseFloat(tc);
+            tu = $( this ).find('.today-units').text();
+            tu = parseFloat(tu);
+
+            recentchangetoday = recentchangetoday + ((tc-tp)*tu)
+
+          });
+
+
+          recentchange = recentchangebefore + recentchangetoday;
+
+          $('#change').text(recentchange.toFixed(2));
+
+          if(recentchange <= 0 ) {
+            $('#recent-change').css('background-color','#e9142d');
+          } else {
+            $('#recent-change').css('background-color','#33b575');
+          }
+
+      });
+      </script>
+
+
+      <table id="transactions_table" class="compact">
+        <header id="recenttransactionheader">
+          最新の取引履歴
+        </header>
+        {% for transaction in pending_transactions %}
+          <div class="today_transaction show-for-small-only">
+            <h3>{{transaction.stock}}</h3>
+            <h4>{{transaction.date_created}}</h4>
+            <h4>
+              {{transaction.get_status_display}} | {{transaction.get_method_display}}| 
+              <span class="action">
+                <a href="{% url 'client:edit_order' transaction.id %}" class="btn btn-primary btn-sm" style="background-color: #aaa; padding: 5px; color: #fff; border-radius: 3px;">Revise</a>
+              </span>
+            </h4>
+            <div class="stock-cost-table">{{ value.price }}</div>
+            <div class="stock-move-table">{{ key.stockdetail_set.last.percentage_change_close|floatformat:2 }}</div>
+          </div>
+        {% endfor %}
+        <thead>
+          <tr>
+            <th class="stock-action-table">取引状態<!-- Status --></th>
+            <th class="stock-order-id"></th>
+            <th class="stock-name-table">会社名</th>
+            <th class="stock-holding-table">株数<!-- Holding --></th>
+            <th class="stock-price-table">売買区分</th>
+            <th class="stock-market-price-table">株価<!-- Market Price --></th>
+            <th class="stock-cost-table">合計額<!-- Cost --></th>
+            <th class="stock-timestamp-table">注文日時<!-- Timestamp --></th>
+            <th class="stock-revise">&nbsp;</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in order_set.all %}
+          <tr>
+            <td class="stock-action-table">
+              {{order.get_status_display}}
+            </td>
+            <td class="stock-order-id">
+              {{order.id|stringformat:"04d" }}
+            </td>
+            <td class="stock-name-table" style="padding-left:30px;">
+              <span class="stock-name-1">{{order.stock}}</span>
+            </td>
+            <td class="stock-holding-table">{{order.units}}</td>
+            <td class="stock-price-table">
+              {% if order.method = 'B' %}
+                購入
+              {% else %}
+                売却
+              {% endif %}
+            </td>
+            <td class="stock-market-price-table">{{order.price|div:order.units|intcomma}}</td>
+            <td class="stock-cost-table">{{order.price|intcomma}}</td>
+            <td class="stock-timestamp-table">{{order.date_created}}</td>
+            <td>
+              <span class="action">
+                {% if order.status = 'Exe' or order.status = 'Can' %}
+                  &nbsp;
+                {% elif order.status = 'Rev' or order.execution_type = 'MO' %}
+                  Locked
+                {% else %}
+                  <a href="{% url 'client:edit_order' order.id %}" class="btn btn-primary btn-sm" style="background-color: #aaa; padding: 2px 5px; color: #fff; border-radius: 3px;">注文の変更</a>
+                {% endif %}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+
+
+    <script>
+
+      $( function() {
+
+
+
+
+        $('.stock-action-table:contains("Pending")').text('約定待ち');
+        $('.stock-action-table:contains("Cancelled")').text('キャンセル'); 
+        $('.stock-action-table:contains("Executed")').text('約定済み'); 
+        $('.stock-action-table:contains("Processing")').text('処理'); 
+        $('.stock-action-table:contains("Queued")').text('約定待ち'); 
+
+        $.fn.digits = function(){ 
+          return this.each(function(){ 
+              $(this).text( $(this).text().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,") ); 
+          })
+        }
+
+        $(".stock-holding-table").digits();
+        $(".stock-profit-table span").digits();
+
+      });
+
+    </script>
+{% endblock %}

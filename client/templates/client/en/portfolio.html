@@ -1,0 +1,186 @@
+{% extends 'client/en/base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+
+
+{% block content %}
+
+    <script>
+
+      $( function() {
+        $( "#trade_link" ).addClass( "selected" );
+      });
+    </script>
+
+
+    <div class="row">
+      <div class="large-12 columns">
+        <div class="module">
+          <div class="module-header">
+            <div class="large-12 columns module-title">
+              Portfolio
+            </div>
+          </div>
+          <div class="module-content" id="portfolio">
+            <div class="large-12 columns">
+              <table>
+                <tr class="table-header"> 
+                  <td>Stock</td>
+                  <td>Holding</td>
+                  <td>Ave. Price</td>
+                  <td>Total Cost</td>
+                  <td>Total Value</td>
+                  <td>Total Change</td>
+                  <td>Sell</td>
+                </tr>
+                {% for key, value in portfolio.items %}
+                <tr class="portfolio-position">
+                  <td>
+                    <div class="stock-line-1">
+                      <a href="{% url 'client:stock' key.symbol %}" style="color:#666;">{{ key.symbol }}</a> <span class="price">{{ value.stockprice.last_traded_price|floatformat:2|intcomma }}</span> 
+                      {% if value.stockprice.indicator == 'U' %}
+                      <span class="up">
+                      {% elif value.stockprice.indicator == 'D' %}
+                      <span class="down">
+                      {% else %}
+                      <span class="same">
+                      {% endif %}
+                      ({{ value.stockprice.percentage_change_close|floatformat:2 }})
+                      </span>
+                    </div>
+                    <div class="stock-line-2">
+                      <a href="{% url 'client:stock' key.symbol %}" style="color:#666;">{{ key }}</a>
+                    </div>
+                  </td>
+                  <td class="table-details">{{ value.units|intcomma }}</td>
+                  <td class="table-details">
+                    {% if value.price|div:value.units >= 1 %}
+                    {{ value.price|div:value.units|floatformat:2 }}
+                    {% else %}
+                    {{ value.price|div:value.units|floatformat:4 }}
+                    {% endif %}
+                  </td>
+                  <td class="table-details">
+                    {{ value.price|add:value.charge|floatformat:2|intcomma|intcomma }}
+                  </td>
+                  <td class="table-highlight">
+                  {% if value.stockprice.last_traded_price|mul:value.units|sub:value.price > 0 %}
+                  <span class="up">
+                  {% elif value.stockprice.last_traded_price|mul:value.units|sub:value.price < 0 %}
+                  <span class="down">
+                  {% else %}
+                  <span class="same">
+                  {% endif %}
+                  {{ value.stockprice.last_traded_price|mul:value.units|floatformat:2|intcomma }}
+                  </span>
+                  </td>
+                  <td class="table-highlight">
+                  {% if value.stockprice.last_traded_price|mul:value.units|sub:value.price > 0 %}
+                  <span class="up">
+                  {% elif value.stockprice.last_traded_price|mul:value.units|sub:value.price < 0 %}
+                  <span class="down">
+                  {% else %}
+                  <span class="same">
+                  {% endif %}
+                  {{ value.stockprice.last_traded_price|mul:value.units|sub:value.price|floatformat:2|intcomma }} ({{ value.stockprice.last_traded_price|mul:value.units|sub:value.price|div:value.price|mul:100|floatformat:2 }})
+                  </span></td>
+                  <td><a href="{% url 'client:sell' key.symbol %}" class="sell">Sell</a>&nbsp;<a href="{% url 'client:buy' key.symbol %}" class="sell" style="background-color:#258dad">Buy</a></td>
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="large-8 columns">
+        <div class="module">
+          <div class="module-header">
+            <div class="large-12 columns module-title">
+              Orders
+            </div>
+          </div>
+          <div class="module-content" id="portfolio">
+            <div class="large-12 columns">
+              <table>
+                <tr class="table-header"> 
+                  <td>Type</td>
+                  <td>Stock</td>
+                  <td>Units</td>
+                  <td>Price</td>
+                  <td>Total Cost</td>
+                  <td>Status</td>
+                  <td>&nbsp;</td>
+                </tr>
+                {% for order in order_set.all %}
+                <tr>
+                  <td class="table-highlight">
+                    {% if order.method == 'S' %}
+                    <span class="sell-text">
+                    {% else %}
+                    <span class="buy-text">
+                    {% endif %}
+                      {{order.get_method_display}}
+                    </span>
+                  </td>
+                  <td class="table-highlight">{{order.stock.symbol}}</td>
+                  <td class="table-details">{{order.units|intcomma}}</td>
+                  <td class="table-details">{{order.price|div:order.units|intcomma}}</td>
+                  <td class="table-details">{{order.price|add:order.charge|intcomma}}</td>
+                  <td class="table-details">
+                    {% if order.status = 'Rev' %}
+                      Queued
+                    {% else %}
+                      {{order.get_status_display}}
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if order.status = 'Exe' or order.status = 'Can' or order.status = 'Inc' %}
+                      &nbsp;
+                    {% elif order.status = 'Rev' %}
+                      <span data-tooltip aria-haspopup="true" class="has-tip" data-disable-hover="false" tabindex="1" title="Your order was locked because of one of the following reasons: 1) the order price has been triggered or very near the current price 2) Market status is pre-open or pre-close">Locked</span>
+                    {% else %}
+                      <a href="{% url 'client:edit_order' order.id %}"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="large-4 columns">
+        <div class="module">
+          <div class="module-header">
+            <div class="large-12 columns module-title">
+              Wallet History
+            </div>
+          </div>
+          <div class="module-content">
+            <div class="large-12 columns">
+              <table>
+                <tr class="table-header"> 
+                  <td>Transaction</td>
+                  <td>Amount</td>
+                </tr>
+                {% for transaction in wallet_set.all %}
+                <tr class="portfolio-position">
+                  <td class="table-highlight">{{transaction.note}}</td>
+                  <td class="table-details">{{transaction.amount|intcomma}}</td>
+                </tr>
+                {% endfor %}
+               
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+{% endblock %}

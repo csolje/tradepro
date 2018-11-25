@@ -1,0 +1,465 @@
+{% extends 'client/en/base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+
+{% block content %}
+
+    <script>
+
+      $( function() {
+        $( "#market_link" ).addClass( "selected" );
+      });
+    </script>
+
+    
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script>window.jQuery || document.write('<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"><\/script>')</script>
+    <script type="text/javascript" src="/static/charting_library.min.js"></script>
+    <script type="text/javascript" src="/static/datafeed/udf/datafeed.js"></script>
+
+    <div id="ticker" class="row" data-equalizer="ticker" style="font-size:8pt; font-weight:800; background-color:#fff; width: 100%; margin-left: auto; margin-right: auto; max-width: initial;">
+      <div class="large-6 columns">
+        <div class="row">
+          <div class="large-2 columns ticker" style="background-color:#eee;" data-equalizer-watch>
+            <div class="label-ticker">Symbol</div>
+            <div class="label-ticker">Price</div>
+            <div class="label-ticker">Units</div>
+            <div class="label-ticker">Sell</div>
+            <div class="label-ticker">Buy</div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker21" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker20" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker19" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker18" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker17" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker16" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker15" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker14" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker13" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker12" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+        </div>
+      </div>
+      <div class="large-6 columns">
+        <div class="row">
+          <div class="large-1 columns ticker" id="ticker11" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker10" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker9" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker8" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker7" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker6" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker5" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker4" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker3" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker2" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker1" data-equalizer-watch>
+            <div class="stock-name"></div>
+            <div class="stock-price"></div>
+            <div class="stock-units"></div>
+            <div class="stock-pbroker"></div>
+            <div class="stock-abroker"></div>
+          </div>
+          <div class="large-1 columns ticker" id="ticker0" data-equalizer-watch>
+            <div class="stock-name">&nbsp;</div>
+            <div class="stock-price">&nbsp;</div>
+            <div class="stock-units">&nbsp;</div>
+            <div class="stock-pbroker">&nbsp;</div>
+            <div class="stock-abroker">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" id="watchlist" data-equalizer="watchlist">
+      <div class="large-4 columns"  data-equalizer-watch>
+        <div class="row">
+          {% for index in indices %}
+          <div class="large-6 columns">
+            {% if index.indicator == 'U' %}
+            <div class="module" style="background-color:#2bb673; color:#fff;">
+            {% elif index.indicator == 'D' %}
+            <div class="module" style="background-color:#ee362f; color:#fff;">
+            {% else %}
+            <div class="module" style="background-color:#ccc; color:#fff;">
+            {% endif %}
+              <div class="module-content">
+                <div class="large-12 columns"> 
+                  <div class="stock-symbol">
+                    {{ index.security_symbol }}
+                  </div>
+                  <div class="stock-name">
+                    {{ index.total_volume|floatformat:2 }} ({{ index.percentage_change_close|floatformat:2}}%)<br>
+                    {{ index.security_alias }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="large-8 columns" data-equalizer-watch>
+        <div id="stock-chart" class="module" style="height:100%;">
+          <div class="wrap" style="height:100%;">
+            <div id="frame" style="overflow:hidden;height:100%;">
+              <div id="tv_chart_container" style="height:100%;width:100%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row" id="specs" style="margin-top:30px;">
+      <div class="large-4 columns">
+        <div class="module">
+          <div class="module-header">
+            <div class="large-12 columns module-title">
+              Most Active
+            </div>
+          </div>
+          <div class="module-content" style="padding:15px;">
+            <table style="background:none;">
+              <tr>
+                <td class="stock-label">Stock</td>
+                <td class="stock-label text-right">Price</td>
+                <td class="stock-label text-right">Volume</td>
+              </tr>
+              {% for value in active %}
+                <tr>
+                  <td>{{ value.stock.symbol }}</td>
+                  <td class="text-right">
+                  {{ value.lastprice|floatformat:2 }} (
+                  
+                  {% if value.change > 0 %}
+                    <span style="color:#2bb673">{{ value.change|floatformat:2 }}%</span>
+                  {% elif index.indicator < 0 %}
+                    <span style="color:#ee362f">{{ value.change|floatformat:2 }}%</span>
+                  {% else %}
+                    {{ value.change|floatformat:2 }}%
+                  {% endif %}
+                  )
+                  </td>
+                  <td class="text-right">{{ value.volume|floatformat:0 }}</td>
+                </tr>
+              {% endfor %}
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="large-4 columns">
+        <div class="module">
+          <div class="module-header">
+            <div class="large-12 columns module-title">
+              Top Gainers
+            </div>
+          </div>
+          <div class="module-content" style="padding:15px;">
+            <table style="background:none;">
+              <tr>
+                <td class="stock-label">Stock</td>
+                <td class="stock-label text-right">Price</td>
+                <td class="stock-label text-right">Change</td>
+              </tr>
+              {% for value in winners %}
+                <tr>
+                  <td>{{ value.stock.symbol }}</td>
+                  <td class="text-right">{{ value.lastprice|floatformat:2 }}</td>
+                  <td class="text-right" style="color:#2bb673">{{ value.change|floatformat:2 }}%</td>
+                </tr>
+              {% endfor %}
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="large-4 columns">
+        <div class="module">
+          <div class="module-header">
+            <div class="large-12 columns module-title">
+              Top Losers
+            </div>
+          </div>
+          <div class="module-content" style="padding:15px;">
+            <table style="background:none;">
+              <tr>
+                <td class="stock-label">Stock</td>
+                <td class="stock-label text-right">Price</td>
+                <td class="stock-label text-right">Change</td>
+              </tr>
+              {% for value in losers %}
+                <tr>
+                  <td>{{ value.stock.symbol }}</td>
+                  <td class="text-right">{{ value.lastprice|floatformat:2 }}</td>
+                  <td class="text-right" style="color:#ee362f">{{ value.change|floatformat:2 }}%</td>
+                </tr>
+              {% endfor %}
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      
+
+    $( function() {
+
+      var url = location.href;
+
+        var start = url.indexOf('//');
+        if (start < 0)
+            start = 0 
+        else 
+            start = start + 2;
+
+        var end = url.indexOf('/', start);
+        if (end < 0) end = url.length - start;
+
+        var baseURL = url.substring(start, end);
+
+        udfurl = location.protocol
+
+        urlp = udfurl + "//" + baseURL
+
+
+
+      
+        setInterval(function() {
+          val1 = []
+          tickerref = 0
+          $.getJSON(urlp+"/udffeed/ticker/", function( data ) {
+            $.each( data, function( key, val ) {
+              while (tickerref <= 21){
+                tickeritem = val[tickerref]
+                tickerindicator = tickeritem.indicator
+                $("#ticker"+tickerref+" .stock-name").html(tickeritem.stock)
+                $("#ticker"+tickerref+" .stock-price").html(tickeritem.price)
+                $("#ticker"+tickerref+" .stock-units").html(tickeritem.units)
+                $("#ticker"+tickerref+" .stock-pbroker").html(tickeritem.pbroker)
+                $("#ticker"+tickerref+" .stock-abroker").html(tickeritem.abroker)
+
+                if (tickerindicator == "D") {
+                  $("#ticker"+tickerref+" .stock-price").removeClass("up");
+                  $("#ticker"+tickerref+" .stock-price").addClass("down");
+
+                  
+                  $("#ticker"+tickerref).removeClass("tickerup");
+                  $("#ticker"+tickerref).removeClass("tickersame");
+                  $("#ticker"+tickerref).addClass("tickerdown");
+                } else if (tickerindicator == "U") {
+                  $("#ticker"+tickerref+" .stock-price").removeClass("down");
+                  $("#ticker"+tickerref+" .stock-price").addClass("up");
+
+                  $("#ticker"+tickerref).removeClass("tickerdown");
+                  $("#ticker"+tickerref).removeClass("tickersame");
+                  $("#ticker"+tickerref).addClass("tickerup");
+                } else {
+                  $("#ticker"+tickerref+" .stock-price").removeClass("up");
+                  $("#ticker"+tickerref+" .stock-price").removeClass("down");
+                  $("#ticker"+tickerref+" .stock-price").addClass("");
+
+                  $("#ticker"+tickerref).removeClass("tickerdown");
+                  $("#ticker"+tickerref).removeClass("tickerup");
+                  $("#ticker"+tickerref).addClass("tickersame");
+                }
+
+                tickerref = tickerref + 1
+              } 
+            });
+          });
+        }, 3000);
+
+      var psechange = parseFloat($('#pse-change').text());
+
+      if( psechange >= 0) {
+        $('#pse').css('background-color','#33b575');
+      } else {
+        $('#pse').css('background-color','#e9142d');
+      }
+    
+
+
+    } );
+
+
+      </script>
+
+      <script type="text/javascript">
+
+  
+
+        TradingView.onready(function () {
+          widget = new TradingView.widget({
+            symbol: 'PSEI',
+            interval: 'D',
+            container_id: 'tv_chart_container',
+            datafeed:datafeed  = new Datafeeds.UDFCompatibleDatafeed('http://pse.tools/api/chart', 100000),
+            timezone: 'Asia/Hong_Kong',
+            locale: "en",
+            library_path: {% static '' %},
+            width: '100%',
+            height: '100%',
+
+disabled_features: ["header_fullscreen_button", "header_symbol_search"],
+            locale: 'en',
+            {% if request.user.anonymous %}
+                      user_id: 'public_user_id',
+                  {% else %}
+                      charts_storage_url: 'http://139.162.50.63',
+                      user_id: '{{ request.user.username }}',
+                  {% endif %}
+                  
+
+                  width: '100%',
+                  height: '100%',
+
+            drawings_access: { type: 'black', tools: [ { name: "Regression Trend" } ] },
+          });
+
+          widget.onChartReady(function () {
+
+            //setTimeout(initChart, 0);
+            initChart();
+          });
+
+          function initChart() {
+             widget.createButton()
+                .attr('title', "Full Screen")
+                .on('click', function (e) { toggleFullScreenTradingViewChart(); })
+                .append($('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 586.09999 586.09996" width="18" height="14" enable-background="new 0 0 595.3 841.9"><path d="M172.6 367.9l-97.7 97.7L0 390.7v195.4h195.4l-74.9-74.9 97.7-97.7-45.6-45.6zM195.4 0H0v195.4l74.9-74.9 97.7 97.7 45.6-45.6-97.7-97.7L195.4 0zm195.3 0l74.9 74.9-97.7 97.7 45.6 45.6 97.7-97.7 74.9 74.9V0H390.7zm22.8 367.9l-45.6 45.6 97.7 97.7-74.9 74.9h195.4V390.7l-74.9 74.9-97.7-97.7z"></path><svg>'));
+          };
+
+           function toggleFullScreenTradingViewChart() {
+            $('#tv_chart_container').toggleFullScreen();
+          };
+
+           function d(c){var b,a;if(!this.length)return this;b=this[0];b.ownerDocument?a=b.ownerDocument:(a=b,b=a.documentElement);if(null==c){if(!a.exitFullscreen&&!a.webkitExitFullscreen&&!a.webkitCancelFullScreen&&!a.msExitFullscreen&&!a.mozCancelFullScreen)return null;c=!!a.fullscreenElement||!!a.msFullscreenElement||!!a.webkitIsFullScreen||!!a.mozFullScreen;return!c?c:a.fullscreenElement||a.webkitFullscreenElement||a.webkitCurrentFullScreenElement||a.msFullscreenElement||a.mozFullScreenElement||c}c?(c=
+b.requestFullscreen||b.webkitRequestFullscreen||b.webkitRequestFullScreen||b.msRequestFullscreen||b.mozRequestFullScreen)&&c.call(b):(c=a.exitFullscreen||a.webkitExitFullscreen||a.webkitCancelFullScreen||a.msExitFullscreen||a.mozCancelFullScreen)&&c.call(a);return this}jQuery.fn.fullScreen=d;jQuery.fn.toggleFullScreen=function(){return d.call(this,!d.call(this))};var e,f,g;e=document;
+e.webkitCancelFullScreen?(f="webkitfullscreenchange",g="webkitfullscreenerror"):e.msExitFullscreen?(f="MSFullscreenChange",g="MSFullscreenError"):e.mozCancelFullScreen?(f="mozfullscreenchange",g="mozfullscreenerror"):(f="fullscreenchange",g="fullscreenerror");jQuery(document).bind(f,function(){jQuery(document).trigger(new jQuery.Event("fullscreenchange"))});jQuery(document).bind(g,function(){jQuery(document).trigger(new jQuery.Event("fullscreenerror"))});
+        });
+
+
+
+
+    </script>
+
+
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+
+{% block head %}
+<link rel="stylesheet" href="http://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css">
+<script src="http://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+    $('#ordersTable').DataTable({
+        "order": [[ 0, "desc" ]],
+        "pageLength": 20
+    });
+});
+</script>
+{% endblock %}
+
+{% block content %}
+    {% include 'user-info.html' %}
+
+    <div id="transaction-and-ads">
+      <div id="transactions" class="module">
+
+      	<table id="ordersTable">
+		    <thead>
+		        <tr>
+		            <th>注文日時</th>
+		            <th>取引状態</th>
+		            <th>会社名</th>
+		            <th>株式数</th>
+		            <th>Method</th>
+		            <th>株式購入額</th>
+		        </tr>
+		    </thead>
+		    <tbody>
+		        {% for order in order_set.all %}
+		        <tr class="{{ order.order_type }}">
+		        	<td>{{order.date_created}}</td>
+		            <td>{{order.get_status_display}}</td>
+		            <td>
+		            	<span class="action">
+			              {% if order.status = 'Pen'  %}
+			              <a href="{% url 'client:edit_order' order.id %}" class="btn btn-primary btn-sm" style="background-color: #aaa; padding: 5px; color: #fff; border-radius: 3px;">Revise</a>
+			              {% else %}
+			              <a href="#" class="btn btn-primary btn-sm" style="background-color: #fff; padding: 5px; color: #aaa; border-radius: 3px;">Locked</a>
+			              {% endif %}
+			            </span>
+			            &nbsp;&nbsp;&nbsp;<span class="stock-name-1">{{order.stock}}</span>
+		            </td>
+		            <td>{{order.units}}</td>
+		            <td>
+		            	{% if order.method = 'B' %}
+			              株式購入<!--Buy-->
+			            {% else %}
+			              株式売却<!--Sell-->
+			            {% endif %}
+		            </td>
+		            <td>{{order.price|intcomma}}</td>
+		        </tr>
+		        {% endfor %}
+		    </tbody>
+		</table>
+
+      </div>
+    </div>
+
+{% endblock %}

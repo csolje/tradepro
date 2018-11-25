@@ -1,0 +1,60 @@
+{% load static %}
+
+
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFT-ROI Order Management System</title>
+
+    <script src="http://code.jquery.com/jquery-3.1.1.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'client/css/foundation.css' %}">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="{% static 'client/css/app.css' %}">
+    <script src="{% static 'client/js/app.js' %}"></script>
+    <script src="https://use.fontawesome.com/0f3fca3012.js"></script>
+
+
+    <link rel="stylesheet" href="http://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css">
+    <script src="http://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+
+    </head>
+  <body>
+    
+    <div id="home" class="dark" style="background:url('http://jp.eagleonline.ph/wp-content/themes/eagleonline/img/blueover.png'); background-size:cover;">
+        <div id="home-overlay" style="background:url('http://jp.eagleonline.ph/wp-content/themes/eagleonline/img/home.png'); background-size:cover;">
+            <div class="row align-middle" >
+                <div class="large-4 columns">
+                    <img src="{% static 'client/images/logow.png' %}" style="width:100%;">
+                </div>
+                <div class="large-4 columns large-offset-4">
+                    <div class="module" style="padding-top:30px; padding-bottom:30px;">
+                        <div class="module-content">
+                            <div class="large-12 columns">
+                                <form method="post" action="{% url 'django.contrib.auth.views.login' %}">
+                                    {% csrf_token %}
+                                    {{ form }}
+                                    <div align="left">
+                                        <div class="row"> 
+                                            <div class="large-12 columns">
+                                                <input type="submit" class="button primary medium expanded" style="color:#fff; text-transform: none;" value="Sign In" />
+                                            </div>
+                                            <div class="large-12 columns text-center">
+                                                <input type="hidden" name="next" value="{{ next }}" />
+                                                <a href="http://mft-roi.com/password_reset/">Forgot Password?</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </body>
+</html>

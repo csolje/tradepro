@@ -1,0 +1,25 @@
+{% extends 'client/en/base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+
+{% block content %}
+
+
+<div class="row">
+	<div class="large-6 large-offset-3">
+		<h2><br>Hi {{ client.first_name }} {{ client.last_name }}</h2>
+		<p class="show-for-small-only"><a href="http://mft-roi.com/logout">Logout</a></p>
+		<h4>Change Password for {{ client.user }}</h4>
+		<form action="{% url 'client:account' %}" method="POST" >{% csrf_token %}
+
+			{{form}}
+			<input type="submit" class="button" value="Save Changes" />
+
+		</form>	
+	</div>
+</div>
+
+
+
+{% endblock %}

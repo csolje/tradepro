@@ -1,0 +1,13 @@
+{% extends 'base-hq.html' %}
+{% load static %}
+{% load bootstrap %}
+
+{% block body %}
+
+<form action="{% url 'hq:add_portfolio' client_id symbol %}" method="post">
+    {% csrf_token %}
+    {{ order_form|bootstrap }}
+    <input type="submit" value="Submit" />
+</form>
+
+{% endblock %}

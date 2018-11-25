@@ -1,0 +1,182 @@
+{% extends 'client/ja/base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+
+
+{% block content %}
+
+    <script>
+
+      $( function() {
+        $( "#trade_link" ).addClass( "selected" );
+      });
+    </script>
+
+
+    <div class="row">
+      <div class="large-12 columns">
+        <div class="module">
+          <div class="module-header">
+            <div class="large-12 columns module-title">
+              ポートフォリオ 
+            </div>
+          </div>
+          <div class="module-content" id="portfolio">
+            <div class="large-12 columns">
+              <table>
+                <tr class="table-header"> 
+                  <td>会社名</td>
+                  <td>株数</td>
+                  <td>平均購入株価</td>
+                  <td>購入額</td>
+                  <td>時価総額</td>
+                  <td>損益</td>
+                  <td>売却</td>
+                </tr>
+                {% for key, value in portfolio.items %}
+                <tr class="portfolio-position">
+                  <td>
+                    <div class="stock-line-1">
+                      <a href="{% url 'client:stock' key.symbol %}" style="color:#666;">{{ key.symbol }}</a> <span class="price">{{ value.stockprice.last_traded_price|floatformat:2|intcomma }}</span> 
+                      {% if value.stockprice.indicator == 'U' %}
+                      <span class="up">
+                      {% elif value.stockprice.indicator == 'D' %}
+                      <span class="down">
+                      {% else %}
+                      <span class="same">
+                      {% endif %}
+                      ({{ value.stockprice.percentage_change_close|floatformat:2 }})
+                      </span>
+                    </div>
+                    <div class="stock-line-2">
+                      <a href="{% url 'client:stock' key.symbol %}" style="color:#666;">{{ key }}</a>
+                    </div>
+                  </td>
+                  <td class="table-details">{{ value.units|intcomma }}</td>
+                  <td class="table-details">
+                    {% if value.price|div:value.units >= 1 %}
+                    {{ value.price|div:value.units|floatformat:2 }}
+                    {% else %}
+                    {{ value.price|div:value.units|floatformat:4 }}
+                    {% endif %}
+                  </td>
+                  <td class="table-details">
+                    {{ value.price|add:value.charge|floatformat:2|intcomma|intcomma }}
+                  </td>
+                  <td class="table-highlight">
+                  {% if value.stockprice.last_traded_price|mul:value.units|sub:value.price > 0 %}
+                  <span class="up">
+                  {% elif value.stockprice.last_traded_price|mul:value.units|sub:value.price < 0 %}
+                  <span class="down">
+                  {% else %}
+                  <span class="same">
+                  {% endif %}
+                  {{ value.stockprice.last_traded_price|mul:value.units|floatformat:2|intcomma }}
+                  </span>
+                  </td>
+                  <td class="table-highlight">
+                  {% if value.stockprice.last_traded_price|mul:value.units|sub:value.price > 0 %}
+                  <span class="up">
+                  {% elif value.stockprice.last_traded_price|mul:value.units|sub:value.price < 0 %}
+                  <span class="down">
+                  {% else %}
+                  <span class="same">
+                  {% endif %}
+                  {{ value.stockprice.last_traded_price|mul:value.units|sub:value.price|floatformat:2|intcomma }} ({{ value.stockprice.last_traded_price|mul:value.units|sub:value.price|div:value.price|mul:100|floatformat:2 }})
+                  </span></td>
+                  <td><a href="{% url 'client:sell' key.symbol %}" class="sell">売却</a></td>
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="large-8 columns">
+        <div class="module">
+          <div class="module-header">
+            <div class="large-12 columns module-title">
+              最新の取引履歴 
+            </div>
+          </div>
+          <div class="module-content" id="portfolio">
+            <div class="large-12 columns">
+              <table>
+                <tr class="table-header"> 
+                  <td>売買区分</td>
+                  <td>会社名</td>
+                  <td>株数</td>
+                  <td>株価</td>
+                  <td>合計額</td>
+                  <td>取引状態</td>
+                  <td>&nbsp;</td>
+                </tr>
+                {% for order in order_set.all %}
+                <tr>
+                  <td class="table-highlight">
+                    {% if order.method == 'S' %}
+                    <span class="sell-text">売却
+                    {% else %}
+                    <span class="buy-text">購入
+                    {% endif %}
+                      {{order.get_method_display}}
+                    </span>
+                  </td>
+                  <td class="table-highlight">{{order.stock.symbol}}</td>
+                  <td class="table-details">{{order.units|intcomma}}</td>
+                  <td class="table-details">{{order.price|div:order.units|intcomma}}</td>
+                  <td class="table-details">{{order.price|add:order.charge|intcomma}}</td>
+                  <td class="table-details order-status">{{order.get_status_display}}</td>
+                  <td>
+                    {% if order.status = 'Exe' or order.status = 'Can' %}
+                      &nbsp;
+                    {% elif order.status = 'Rev' or order.execution_type = 'MO' %}
+                      &nbsp;
+                    {% else %}
+                      <a href="{% url 'client:edit_order' order.id %}"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="large-4 columns">
+        <div class="module">
+          <div class="module-header">
+            <div class="large-12 columns module-title">
+              入出金履歴
+            </div>
+          </div>
+          <div class="module-content">
+            <div class="large-12 columns">
+              <table>
+                <tr class="table-header"> 
+                  <td>取引項目</td>
+                  <td>金額</td>
+                </tr>
+                {% for transaction in wallet_set.all %}
+                <tr class="portfolio-position">
+                  <td class="table-highlight">{{transaction.note}}</td>
+                  <td class="table-details">{{transaction.amount|intcomma}}</td>
+                </tr>
+                {% endfor %}
+               
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+{% endblock %}

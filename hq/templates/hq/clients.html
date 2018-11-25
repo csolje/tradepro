@@ -1,0 +1,49 @@
+{% extends 'base-hq.html' %}
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="http://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css">
+<script src="http://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+    $('#ordersTable').DataTable({
+        "order": [[ 0, "desc" ]],
+        "pageLength": 20
+    });
+    console.log('lalala');
+});
+</script>
+{% endblock %}
+
+{% block body %}
+
+<a href="{% url 'hq:create_client' %}" class="btn btn-primary btn-sm">CREATE NEW CLIENT</a>
+<table id="ordersTable">
+    <thead>
+        <tr>
+            <th>User ID</th>
+            <th>Username</th>
+            <th>Last Name</th>
+            <th>First Name</th>
+            <th>E-Mail</th>
+            <th>Agent</th>
+            <th>Wallet</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for client in clients %}
+        <tr>
+            <td>{{client.id }}</td>
+            <td>{{client.user }}</td>
+            <td>{{client.last_name }}</td>
+            <td>{{client.first_name }}</td>
+            <td>{{client.email }}</td>
+            <td>{{client.agents }}</td>
+            <td>{{client.wallet }}</a></td>
+            <td><a href="{% url 'hq:client' client.id %}" target="_blank" class="btn btn-primary btn-lg">View Client</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'base-hq.html' %}
+{% load static %}
+{% load bootstrap %}
+
+{% block body %}
+
+<form action="{% url 'hq:order_split' order.id %}" method="post">
+    {% csrf_token %}
+    {{ form|bootstrap }}
+    <input type="submit" value="Submit" />
+</form>
+
+{% endblock %}
+

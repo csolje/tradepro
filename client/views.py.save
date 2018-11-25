@@ -1,0 +1,457 @@
+from django.shortcuts import render, get_object_or_404
+from pseparser.models import *
+from .models import *
+from datetime import datetime, date, timedelta
+from .forms import *
+from django.core.urlresolvers import reverse
+from django.http import HttpResponseRedirect
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login, logout
+
+from django.db.models import Sum, Case, When
+
+# Create your views here.
+@login_required(login_url='login')
+def index(request):
+    client = request.user.client
+    pse = Index.objects.get(security_symbol="PSE")
+    indices = Index.objects.all().exclude(security_symbol="PSE")
+
+    return render(request, 'client/index.html', {'client': client, 'pse': pse, 'indices': indices})
+
+@login_required(login_url='login')
+def stock(request, symbol):
+    client = request.user.client
+    pse = Index.objects.get(security_symbol="PSE")
+    company = get_object_or_404(Company, symbol=symbol)
+    latest_stock = company.stockdetail_set.last()
+    subsector = get_object_or_404(Subsector, id=company.subsector)
+    total_value = latest_stock.total_volume * latest_stock.last_traded_price
+    change_in_points = latest_stock.last_traded_price * (latest_stock.percentage_change_close/100)
+
+    today = date.today()
+
+    today_stocks = company.stockdetail_set.filter(date_details__date=date.today())
+
+    while not today_stocks:
+        today = today - timedelta(1)
+        today_stocks = company.stockdetail_set.filter(date_details__date=today)
+
+    stocks_by_price = today_stocks.order_by('-last_traded_price')
+    highest_price = stocks_by_price.first().last_traded_price
+    lowest_price = stocks_by_price.last().last_traded_price
+
+    yesterday = today - timedelta(1)
+    yesterday_stocks = company.stockdetail_set.filter(date_details__date=yesterday)
+
+    while not yesterday_stocks:
+        yesterday = yesterday - timedelta(1)
+        yesterday_stocks = company.stockdetail_set.filter(date_details__date=yesterday).order_by('-date_details')
+        if yesterday == (today - timedelta(5)):
+            yesterday_stocks = today_stocks
+            break
+
+    opening_stock = today_stocks.order_by('id').first()
+    closing_stock = yesterday_stocks.order_by('-id').first()
+
+    #credit_stocks = request.user.client.order_set.all().filter(method='B')#.aggregate(Sum('price'))
+    #debit_stocks = request.user.client.order_set.all().filter(method='S')#.aggregate(Sum('price'))
+
+    price = round(latest_stock.last_traded_price, 2)
+    if price and price <=0.04:
+        lot_size = 100000
+        tick_size = 0.005
+    elif price >= 0.05 and price <= 0.49:
+        lot_size = 10000
+        tick_size = 0.005
+    elif price >= 0.5 and price <= 4.99:
+        lot_size = 1000
+        tick_size = 0.01
+    elif price >= 5.00 and price <= 9.99:
+        lot_size = 100
+        tick_size = 0.01
+    elif price >= 10.00 and price <= 19.99:
+        lot_size = 100
+        tick_size = 0.02
+    elif price >= 20.00 and price <= 49.99:
+        lot_size = 100
+        tick_size = 0.05
+    elif price >= 50.00 and price <= 99.99:
+        lot_size = 10
+        tick_size = 0.05
+    elif price >= 100.00 and price <= 199.99:
+        lot_size = 10
+        tick_size = 0.10
+    elif price >= 200.00 and price <= 499.99:
+        lot_size = 10
+        tick_size = 0.20
+    elif price >= 500.00 and price <= 999.99:
+        lot_size = 10
+        tick_size = 0.50
+    elif price >= 1000.00 and price <= 1999.99:
+        lot_size = 5
+        tick_size = 1.00
+    elif price >= 2000.00 and price <= 4998.99:
+        lot_size = 5
+        tick_size = 2.00
+    else:
+        lot_size = 5
+        tick_size = 5.00
+
+    if request.method == 'POST':
+        form = AddToWatchlistForm(request.POST)
+        if form.is_valid():
+            if form.cleaned_data['add'] == 1:
+                request.user.client.watchlist.add(company)
+            else:
+                request.user.client.watchlist.remove(company)
+            return HttpResponseRedirect(reverse('client:stock', args=(symbol,)))
+
+    else:
+        form = AddToWatchlistForm()
+
+    return render(request, 'client/stock.html', {'client': client, 'pse': pse, 'symbol': symbol, 'form': form, 'company': company, 'latest_stock': latest_stock, 'subsector': subsector, 'total_value': total_value, 'change_in_points': change_in_points, 'highest_price': highest_price, 'lowest_price': lowest_price, 'opening_stock': opening_stock, 'closing_stock': closing_stock, 'lot_size': lot_size, 'tick_size': tick_size})
+
+@login_required(login_url='login')
+def buy(request, symbol):
+    company = get_object_or_404(Company, symbol=symbol)
+    pse = Index.objects.get(security_symbol="PSE")
+    latest_stock = company.stockdetail_set.last()
+    subsector = get_object_or_404(Subsector, id=company.subsector)
+    total_value = latest_stock.total_volume * latest_stock.last_traded_price
+    change_in_points = latest_stock.last_traded_price * (latest_stock.percentage_change_close/100)
+
+    today = date.today()
+
+    today_stocks = company.stockdetail_set.filter(date_details__date=date.today())
+
+    while not today_stocks:
+        today = today - timedelta(1)
+        today_stocks = company.stockdetail_set.filter(date_details__date=today)
+
+    stocks_by_price = today_stocks.order_by('-last_traded_price')
+    highest_price = stocks_by_price.first().last_traded_price
+    lowest_price = stocks_by_price.last().last_traded_price
+
+    yesterday = today - timedelta(1)
+    yesterday_stocks = company.stockdetail_set.filter(date_details__date=yesterday)
+
+    while not yesterday_stocks:
+        yesterday = yesterday - timedelta(1)
+        yesterday_stocks = company.stockdetail_set.filter(date_details__date=yesterday).order_by('-date_details')
+
+    opening_stock = today_stocks.order_by('id').first()
+    closing_stock = yesterday_stocks.order_by('-id').first()
+
+    #credit_stocks = request.user.client.order_set.all().filter(method='B')#.aggregate(Sum('price'))
+    #debit_stocks = request.user.client.order_set.all().filter(method='S')#.aggregate(Sum('price'))
+
+    #if credit_stocks > debit_stocks:
+    #    allow_sell = True
+    #    portfolio = credit_stocks - debit_stocks
+
+    client = get_object_or_404(Client, user=request.user)
+
+    bought = client.order_set.values('stock__company__symbol').filter(method='B').exclude(status__in=['Pen','Rev','Rej','Can']).annotate(price=Sum('price')).annotate(units=Sum('units'))
+    sold = client.order_set.values('stock__company__symbol').filter(method='S').exclude(status__in=['Pen','Rev','Rej','Can']).annotate(price=Sum('price')).annotate(units=Sum('units'))
+
+    sold_stocks = {}
+
+    for item in sold:
+        company_item = Company.objects.get(symbol=item['stock__company__symbol'])
+        sold_stocks[company_item] = item
+
+    portfolio = {}
+    total_stock_value = 0
+
+    for item in bought:
+        company_item = Company.objects.get(symbol=item['stock__company__symbol'])
+        if company_item in sold_stocks:
+            item['units'] = item['units'] - sold_stocks[company_item]['units']
+            item['price'] = item['price'] - sold_stocks[company_item]['price']
+        if item['units'] > 0:
+            latest_stock_item = company_item.stockdetail_set.last()
+            total_stock_value = total_stock_value + (item['units']*latest_stock_item.last_traded_price)
+            portfolio[company_item] = item
+
+    pending_stocks = client.order_set.filter(status__in=['Pen','Rev'], method='B').aggregate(price=Sum('price'))['price']
+    if not pending_stocks:
+        pending_stocks = 0
+
+    if request.method == 'POST':
+        form = OrderForm(request.POST)
+        if form.is_valid():
+            client = form.cleaned_data['client']
+            client.wallet = client.wallet - (form.cleaned_data['price'] + form.cleaned_data['charge'])
+            client.save()
+            form.save()
+            #return HttpResponseRedirect(reverse('client:stock', args=(symbol,)))
+            return HttpResponseRedirect(reverse('client:portfolio'))
+
+    else:
+        form = OrderForm()
+
+    price = round(latest_stock.last_traded_price, 2)
+    if price and price <=0.04:
+        lot_size = 100000
+        tick_size = 0.005
+    elif price >= 0.05 and price <= 0.49:
+        lot_size = 10000
+        tick_size = 0.005
+    elif price >= 0.5 and price <= 4.99:
+        lot_size = 1000
+        tick_size = 0.01
+    elif price >= 5.00 and price <= 9.99:
+        lot_size = 100
+        tick_size = 0.01
+    elif price >= 10.00 and price <= 19.99:
+        lot_size = 100
+        tick_size = 0.02
+    elif price >= 20.00 and price <= 49.99:
+        lot_size = 100
+        tick_size = 0.05
+    elif price >= 50.00 and price <= 99.99:
+        lot_size = 10
+        tick_size = 0.05
+    elif price >= 100.00 and price <= 199.99:
+        lot_size = 10
+        tick_size = 0.10
+    elif price >= 200.00 and price <= 499.99:
+        lot_size = 10
+        tick_size = 0.20
+    elif price >= 500.00 and price <= 999.99:
+        lot_size = 10
+        tick_size = 0.50
+    elif price >= 1000.00 and price <= 1999.99:
+        lot_size = 5
+        tick_size = 1.00
+    elif price >= 2000.00 and price <= 4998.99:
+        lot_size = 5
+        tick_size = 2.00
+    else:
+        lot_size = 5
+        tick_size = 5.00
+
+    today_transactions = Order.objects.all().filter(client__user=request.user, method='B', status__in=['Exe'], last_updated__date=date.today())
+
+    return render(request, 'client/buy.html', {'form': form, 'pse': pse, 'symbol': symbol, 'company': company, 'latest_stock': latest_stock, 'subsector': subsector, 'total_value': total_value, 'change_in_points': change_in_points, 'highest_price': highest_price, 'lowest_price': lowest_price, 'opening_stock': opening_stock, 'closing_stock': closing_stock, 'client': client, 'total_stock_value': total_stock_value, 'pending_stocks': pending_stocks, 'lot_size': lot_size, 'portfolio': portfolio, 'tick_size': tick_size, 'today_transactions': today_transactions})
+
+@login_required(login_url='login')
+def sell(request, symbol):
+    company = get_object_or_404(Company, symbol=symbol)
+    pse = Index.objects.get(security_symbol="PSE")
+    latest_stock = company.stockdetail_set.last()
+    subsector = get_object_or_404(Subsector, id=company.subsector)
+    total_value = latest_stock.total_volume * latest_stock.last_traded_price
+    change_in_points = latest_stock.last_traded_price * (latest_stock.percentage_change_close/100)
+
+    today = date.today()
+
+    today_stocks = company.stockdetail_set.filter(date_details__date=date.today())
+
+    while not today_stocks:
+        today = today - timedelta(1)
+        today_stocks = company.stockdetail_set.filter(date_details__date=today)
+
+    stocks_by_price = today_stocks.order_by('-last_traded_price')
+    highest_price = stocks_by_price.first().last_traded_price
+    lowest_price = stocks_by_price.last().last_traded_price
+
+    yesterday = today - timedelta(1)
+    yesterday_stocks = company.stockdetail_set.filter(date_details__date=yesterday)
+
+    while not yesterday_stocks:
+        yesterday = yesterday - timedelta(1)
+        yesterday_stocks = company.stockdetail_set.filter(date_details__date=yesterday).order_by('-date_details')
+
+    opening_stock = today_stocks.order_by('id').first()
+    closing_stock = yesterday_stocks.order_by('-id').first()
+
+    #credit_stocks = request.user.client.order_set.all().filter(method='B')#.aggregate(Sum('price'))
+    #debit_stocks = request.user.client.order_set.all().filter(method='S')#.aggregate(Sum('price'))
+
+    #if credit_stocks > debit_stocks:
+    #    allow_sell = True
+    #    portfolio = credit_stocks - debit_stocks
+
+    client = get_object_or_404(Client, user=request.user)
+
+    bought = client.order_set.values('stock__company__symbol').filter(method='B').exclude(status__in=['Pen','Rev','Rej','Can']).annotate(price=Sum('price')).annotate(units=Sum('units'))
+    sold = client.order_set.values('stock__company__symbol').filter(method='S').exclude(status__in=['Pen','Rev','Rej','Can']).annotate(price=Sum('price')).annotate(units=Sum('units'))
+
+    sold_stocks = {}
+
+    for item in sold:
+        company_item = Company.objects.get(symbol=item['stock__company__symbol'])
+        sold_stocks[company_item] = item
+
+    portfolio = {}
+    total_stock_value = 0
+
+    for item in bought:
+        company_item = Company.objects.get(symbol=item['stock__company__symbol'])
+        if company_item in sold_stocks:
+            item['units'] = item['units'] - sold_stocks[company_item]['units']
+            item['price'] = item['price'] - sold_stocks[company_item]['price']
+        if item['units'] > 0:
+            latest_stock_item = company_item.stockdetail_set.last()
+            total_stock_value = total_stock_value + (item['units']*latest_stock_item.last_traded_price)
+            portfolio[company_item] = item
+
+    pending_stocks = client.order_set.filter(status__in=['Pen','Rev'], method='B').aggregate(price=Sum('price'))['price']
+    if not pending_stocks:
+        pending_stocks = 0
+
+    owned_stocks = portfolio[company]
+
+    if request.method == 'POST':
+        form = OrderForm(request.POST)
+        if form.is_valid():
+            form.save()
+            #return HttpResponseRedirect(reverse('client:stock', args=(symbol,)))
+            return HttpResponseRedirect(reverse('client:portfolio'))
+
+    else:
+        form = OrderForm()
+
+    price = round(latest_stock.last_traded_price, 2)
+    if price and price <=0.04:
+        lot_size = 100000
+        tick_size = 0.005
+    elif price >= 0.05 and price <= 0.49:
+        lot_size = 10000
+        tick_size = 0.005
+    elif price >= 0.5 and price <= 4.99:
+        lot_size = 1000
+        tick_size = 0.01
+    elif price >= 5.00 and price <= 9.99:
+        lot_size = 100
+        tick_size = 0.01
+    elif price >= 10.00 and price <= 19.99:
+        lot_size = 100
+        tick_size = 0.02
+    elif price >= 20.00 and price <= 49.99:
+        lot_size = 100
+        tick_size = 0.05
+    elif price >= 50.00 and price <= 99.99:
+        lot_size = 10
+        tick_size = 0.05
+    elif price >= 100.00 and price <= 199.99:
+        lot_size = 10
+        tick_size = 0.10
+    elif price >= 200.00 and price <= 499.99:
+        lot_size = 10
+        tick_size = 0.20
+    elif price >= 500.00 and price <= 999.99:
+        lot_size = 10
+        tick_size = 0.50
+    elif price >= 1000.00 and price <= 1999.99:
+        lot_size = 5
+        tick_size = 1.00
+    elif price >= 2000.00 and price <= 4998.99:
+        lot_size = 5
+        tick_size = 2.00
+    else:
+        lot_size = 5
+        tick_size = 5.00
+
+    today_transactions = Order.objects.all().filter(client__user=request.user,  method='B', status__in=['Exe'], last_updated__date=date.today())
+
+    return render(request, 'client/buy.html', {'form': form, 'pse': pse, 'sell': True, 'symbol': symbol, 'company': company, 'latest_stock': latest_stock, 'subsector': subsector, 'total_value': total_value, 'change_in_points': change_in_points, 'highest_price': highest_price, 'lowest_price': lowest_price, 'opening_stock': opening_stock, 'closing_stock': closing_stock, 'client': client, 'total_stock_value': total_stock_value, 'pending_stocks': pending_stocks, 'owned_stocks': owned_stocks, 'portfolio': portfolio, 'lot_size': lot_size, 'tick_size': tick_size, 'today_transactions': today_transactions})
+
+def edit_order(request, order_id):
+    order = Order.objects.get(id=order_id)
+    pse = Index.objects.get(security_symbol="PSE")
+    old_price = order.price
+
+    if request.method == 'POST':
+        form = EditOrderForm(request.POST, instance=order)
+        print(form)
+        if form.is_valid():
+            price_difference = old_price - form.cleaned_data['price']
+            client = order.client
+            if order.method == 'B':
+                if form.cleaned_data['status'] == 'Can':
+                    client.wallet = client.wallet + old_price
+                else:
+                    client.wallet = client.wallet + price_difference
+            client.save()
+            form.save()
+            return HttpResponseRedirect(reverse('client:portfolio'))
+
+    else:
+        form = EditOrderForm(instance=order)
+
+    return render(request, 'client/edit_order.html', {'form':form, 'pse': pse, 'order': order})
+
+@login_required(login_url='login')
+def portfolio(request):
+    client = get_object_or_404(Client, user=request.user)
+    pse = Index.objects.get(security_symbol="PSE")
+    values = client.order_set.values('stock__company__symbol').exclude(status__in=['Pen','Rev','Rej','Can']).annotate(price=Sum('price')).annotate(units=Sum('units'))
+
+    #print(total_stocks)
+
+    bought = client.order_set.values('stock__company__symbol').filter(method='B').exclude(status__in=['Pen','Rev','Rej','Can']).annotate(price=Sum('price')).annotate(units=Sum('units'))
+    sold = client.order_set.values('stock__company__symbol').filter(method='S').exclude(status__in=['Pen','Rev','Rej','Can']).annotate(price=Sum('price')).annotate(units=Sum('units'))
+
+    sold_stocks = {}
+
+    for item in sold:
+        company = Company.objects.get(symbol=item['stock__company__symbol'])
+        sold_stocks[company] = item
+
+    portfolio = {}
+    total_stock_value = 0
+
+    for item in bought:
+        company = Company.objects.get(symbol=item['stock__company__symbol'])
+        if company in sold_stocks:
+            item['units'] = item['units'] - sold_stocks[company]['units']
+            item['price'] = item['price'] - sold_stocks[company]['price']
+        if item['units'] > 0:
+            latest_stock_item = company.stockdetail_set.last()
+            total_stock_value = total_stock_value + (item['units']*latest_stock_item.last_traded_price)
+            portfolio[company] = item
+
+    pending_stocks = client.order_set.filter(status__in=['Pen','Rev'], method='B').aggregate(price=Sum('price'))['price']
+    if not pending_stocks:
+        pending_stocks = 0
+
+    order_set = client.order_set.order_by('-id')
+
+    today_transactions = Order.objects.all().filter(client__user=request.user,  method='B', status__in=['Exe'], last_updated__date=date.today())
+
+    return render(request, 'client/portfolio.html', {'client': client, 'pse': pse, 'portfolio': portfolio, 'order_set': order_set, 'total_stock_value': total_stock_value, 'pending_stocks': pending_stocks, 'today_transactions': today_transactions})
+
+@login_required(login_url='login')
+def orders(request):
+    client = get_object_or_404(Client, user=request.user)
+
+    order_set = client.order_set.order_by('-id')
+
+    today_transactions = Order.objects.all().filter(client__user=request.user, last_updated__date=date.today())
+
+    return render(request, 'client/orders.html', {'client': client, 'order_set': order_set, 'today_transactions': today_transactions})
+
+
+@login_required(login_url='login')
+def account(request):
+    client = get_object_or_404(Client, user=request.user)
+    pse = Index.objects.get(security_symbol="PSE")
+    newpassword = request.POST.get("newpassword")
+    renewpasssword = request.POST.get("renewpasssword")
+    username=request.user.username
+    if newpassword == renewpasssword:
+        if request.method == 'GET':
+            form = ChangePasswordForm()
+        else:
+            u = User.objects.get(username__exact=username)
+            u.set_password(newpassword)
+            u.save()
+            return HttpResponseRedirect(reverse('client:account'))
+    else:
+        return HttpResponseRedirect(reverse('client:account'))
+
+    return render(request, 'client/account.html', {'client': client, 'pse': pse, 'form': form })
+

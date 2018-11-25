@@ -1,0 +1,246 @@
+html, body {
+	font-family: 'open sans',sans-serif;
+	background-color:#E9F1F2;
+	color:#67686B;
+}
+
+h1 {
+	font-family:  "mr-eaves-xl-modern",sans-serif;
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+h2 {
+	font-family:  "mr-eaves-xl-modern",sans-serif;
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+h4 {
+	font-family:  "mr-eaves-xl-modern",sans-serif;
+}
+
+h5 {
+	font-family: 'open sans',sans-serif;
+}
+
+
+nav {
+		/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#1e386a+0,27a9df+100 */
+	background: #1e386a; /* Old browsers */
+	background: -moz-linear-gradient(left, #1e386a 0%, #27a9df 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(left, #1e386a 0%,#27a9df 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to right, #1e386a 0%,#27a9df 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1e386a', endColorstr='#27a9df',GradientType=1 ); /* IE6-9 */
+
+}
+
+.button {
+	font-family:  "mr-eaves-xl-modern",sans-serif;
+	text-transform: uppercase;
+}
+
+nav li .button.primary {
+	background-color:#4ABC93;
+	color:#fff;
+}
+
+.top-bar, .top-bar ul {
+	background:none;
+}
+
+nav a{
+	color:#fff;
+	transition:color 0.2s;
+}
+
+nav img {
+	height:50px;
+}
+
+
+
+#second-line {
+	background-color:#45BD94;
+}
+
+#second-line ul {
+	margin:0px;
+}
+
+#second-line ul li {
+	display: inline;
+	text-transform: uppercase;
+	letter-spacing: 2px;
+}
+
+#second-line ul li a {
+	color:#fff;
+	padding-left:1rem;
+	padding-right:1rem;
+	padding-bottom:25px;
+}
+
+#second-line ul .selected {
+	border-bottom:5px #fff solid;
+}
+
+
+.user-value {
+	font-size: 1.5rem;
+	color:#fff;
+	padding-top:1rem;
+}
+
+.user-value-label {
+	color:#fff;
+	padding-bottom:1rem;
+}
+
+.module {
+	background-color:#fff;
+	border-radius: 10px;
+	margin-top:2rem;
+}
+
+.module-header {
+	padding-top:1rem;
+	padding-bottom:1rem;
+	border-bottom:1px #ccc solid;
+}
+
+.module table tr td{
+	padding:0px;
+	background:none;
+	border:none;
+	padding-top:0.5rem;
+	padding-bottom:0.5rem;
+}
+
+.module-title {
+	color:#45BD94;
+	text-transform: uppercase;
+	letter-spacing: 2px;
+}
+
+.module-content {
+	padding-top:0.5rem;
+	padding-bottom:0.5rem;
+}
+
+table tbody tr:nth-child(2n) {
+	background:none;
+}
+
+.table-header {
+	font-weight: 600;
+	color:#ccc;
+}
+
+.stock-line-1 {
+	font-size:1.2rem;
+	font-weight: 700;
+}
+
+.stock-line-1 .price{
+	color:#ACADB0;
+}
+
+.up {
+	color:#2BB673;
+}
+
+.down {
+	color:#EE362F;
+}
+
+.same {
+	color:#ccc;
+}
+
+.table-highlight {
+	font-size:1rem;
+	font-weight: 700;
+}
+
+.table-details {
+	font-size:1rem;
+	font-weight: 500;
+}
+
+.portfolio-position {
+	padding-top:.5rem;
+	padding-bottom:.5rem;
+}
+
+.sell {
+	padding:5px 10px;
+	background-color:#EB886D;
+	color:#fff;
+	border-radius: 10px;
+}
+
+.sell-text {
+	color:#EB886D;
+}
+
+.revise {
+	padding:5px 10px;
+	background-color:#ccc;
+	color:#fff;
+	border-radius: 10px;
+}
+
+.stock-title {
+	font-size:2rem;
+	padding-top:2rem;
+	padding-bottom:1rem;
+}
+
+.stock-symbol {
+	font-weight: 700;
+}
+
+.stock-highlight {
+	font-size:1.5rem;
+	font-weight: 700;
+}
+
+.stock-highlight2 {
+	font-size:1.5rem;
+	font-weight: 500;
+}
+
+#chart {
+	margin-top:2rem;
+}
+
+#watchlist .stock-symbol {
+	font-size:2rem;
+}
+
+#watchlist .stock-price {
+	font-size:2rem;
+}
+
+#home {
+	height:100vh;
+	background:url("../images/blueover.d24ab27e8d5e.png");
+	background-size:cover;
+	background-position: center;
+	background-attachment: fixed;
+}
+
+#home-overlay {
+	background-size:cover;
+	background-position: center;
+	height: 100%;
+}
+
+.dark {
+	color:#fff;
+}
+
+#home .row {
+	height:100%;
+}

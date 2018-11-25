@@ -1,0 +1,84 @@
+{% extends 'base-hq.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+
+{% block body %}
+<br><br>
+<table id="admin">
+    <tr><th>Client:</th><td>{{ client.user }}</td></tr>
+    <tr><th>Last Name:</th><td>{{ client.last_name }}</td></tr>
+    <tr><th>First Name:</th><td>{{ client.first_name }}</td></tr>
+    <tr><th>Current Walle:</th><td>{{ client.wallet }}</td></tr>
+   
+</table>
+
+<form action="{% url 'hq:client' client.id %}" method="post"  id="wallet-form">
+
+{{ form.non_field_errors }}
+{% csrf_token %}
+
+<div class="fieldWrapper">
+    {{ form.units.errors }}
+    <input id="id_wallet" name="wallet" value="0">
+</div>
+
+<a href="#" onclick="formvalidate();" class="btn btn-primary">Add Fund/Withdraw</a>
+
+
+
+<script>
+
+        function formvalidate() {
+
+          Amount = $("#id_wallet").val();
+          console.log('add');
+
+          var r = confirm("Add/Withdraw Fund from Wallet\nAmount:" +  Amount);
+          if (r == true) {
+              $( "#wallet-form" ).submit();
+          } else {
+          }
+        }
+
+</script>
+
+
+
+
+</form>
+
+<table id="table_portfolio" class="table" cellpadding="10">
+        <thead>
+          <tr>
+          	<th class="stock-symbol">Symbol</th>
+            <th class="stock-name-table">Stock Name</th>
+            <th class="stock-holding-table">Holding</th>
+            <th class="stock-sell-table">Average Price</th>
+            <th class="stock-cost-table">Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for key, value in portfolio.items %}
+          <tr>
+          	<td>{{ key.symbol }}</td>
+            <td class="stock-name-table"><a href="{% url 'client:stock' key.symbol %}">{{ key }}</a></td>
+            <td class="stock-holding-table">{{ value.units }}</td>
+            <td class="stock-sell-table">
+              {% if value.price|div:value.units >= 1 %}
+              {{ value.price|div:value.units|floatformat:2 }}
+              {% else %}
+              {{ value.price|div:value.units|floatformat:4 }}
+              {% endif %}
+            </td>
+            <td class="stock-cost-table portfolio-cost-table">{{ value.price|intcomma }}</td>
+
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+
+
+
+{% endblock %}

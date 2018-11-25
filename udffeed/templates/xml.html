@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+<form action="{% url 'udffeed:xml' %}" method="post" enctype='multipart/form-data'>
+    {% csrf_token %}
+    {{ form }}
+    <button type="submit">Submit
+    </button>
+</form>
+<body>
+
+</body>
+
+<script src="https://code.jquery.com/jquery-3.1.1.js"></script>
+<script>
+$('input[type=file]').change(function() {
+  
+  // Return today's date and time
+var currentTime = new Date()
+
+// returns the month (from 0 to 11)
+var month = currentTime.getMonth() + 1
+
+// returns the day of the month (from 1 to 31)
+var day = currentTime.getDate()
+
+// returns the year (four digits)
+var year = currentTime.getFullYear()
+
+  $('input[type=text]').val(year + "-" + month + "-" + day);
+});
+</script>
+</html>

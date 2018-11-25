@@ -1,0 +1,14 @@
+{% extends 'base-hq.html' %}
+{% load static %}
+{% load bootstrap %}
+
+{% block body %}
+
+<form action="{% url 'hq:create_client' %}" method="post">
+    {% csrf_token %}
+    {{ user_form|bootstrap }}
+    {{ client_form|bootstrap }}
+    <input type="submit" value="Submit" />
+</form>
+
+{% endblock %}

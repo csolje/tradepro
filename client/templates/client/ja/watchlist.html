@@ -1,0 +1,473 @@
+{% extends 'client/ja/base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+
+{% block content %}
+
+    <script>
+
+      $( function() {
+        $( "#watchlist_link" ).addClass( "selected" );
+      });
+    </script>
+
+
+<div id="watchlist"  data-equalizer="watchlistform">
+    <div class="row" id="watchlist" data-equalizer="watchlist">
+      <div class="large-12 columns" style="margin-top:30px;"><h3>ウォッチリスト</h3></div>
+      {% for company in client.watchlist.all %}
+      <a href="{% url 'client:stock' company.symbol %}" class="large-3 columns">
+        {% if company.stockprice_set.last.indicator == 'U' %}
+        <div class="module" style="background-color:#2bb673; color:#fff;" data-equalizer-watch="watchlistform">
+        {% elif company.stockprice_set.last.indicator == 'D' %}
+        <div class="module" style="background-color:#ee362f; color:#fff;" data-equalizer-watch="watchlistform">
+        {% else %}
+        <div class="module" style="background-color:#ccc; color:#fff;" data-equalizer-watch="watchlistform">
+        {% endif %}
+          <div class="module-content">
+            <div class="large-12 columns">
+              
+              <div class="stock-symbol">
+                {{ company.symbol }}<br>
+                {{ company.stockprice_set.last.last_traded_price|floatformat:2 }} ({{ company.stockprice_set.last.percentage_change_close|floatformat:2}}%)
+              </div>
+              <div class="stock-name" data-equalizer-watch="watchlist" style="margin-top:30px;">
+                {{ company.company_name }}
+              </div>
+              <div class="stock-day-range" style="margin-top:15px;">
+                <div class="row">
+                  <div class="large-6 columns">安値-高値</div>
+                  <div class="large-6 columns">{{ company.stockprice_set.last.low_price|floatformat:2 }} - {{ company.stockprice_set.last.high_price|floatformat:2 }}</div>
+                </div>
+              </div>
+              <div class="stock-volume">
+                <div class="row">
+                  <div class="large-6 columns">出来高（日)</div>
+                  <div class="large-6 columns">{{ company.stockprice_set.last.total_volume|floatformat:0 }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+
+      <div class="large-3 columns">
+        <div class="module" data-equalizer-watch="watchlistform">
+          <div class="module-content">
+            <div class="large-12 columns" style="padding-top:30px;">
+              <form id="watchlistform" method="post">
+                
+                    <input type="search" placeholder="銘柄検索" size="700" id="stock-search2">
+                    {% csrf_token %}
+                    <button id="id_add" name="add" class="button btn btn-primary btn-sm expanded" value="1" type="submit" style="background-color: #aaa; padding: 10px; color: #fff; border-radius: 3px;">お気に入りに追加</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row" id="watchlist" data-equalizer="watchlist">
+      <div class="large-12 columns" style="margin-top:60px;"><hr><h3>出来高安定銘柄リスト</h3></div>
+      {% for company in watchlistacct.watchlist.all %}
+      <a href="{% url 'client:stock' company.symbol %}" class="large-3 columns">
+        {% if company.stockprice_set.last.indicator == 'U' %}
+        <div class="module" style="background-color:#2bb673; color:#fff;" data-equalizer-watch="watchlistform">
+        {% elif company.stockprice_set.last.indicator == 'D' %}
+        <div class="module" style="background-color:#ee362f; color:#fff;" data-equalizer-watch="watchlistform">
+        {% else %}
+        <div class="module" style="background-color:#ccc; color:#fff;" data-equalizer-watch="watchlistform">
+        {% endif %}
+          <div class="module-content">
+            <div class="large-12 columns">
+              
+              <div class="stock-symbol">
+                {{ company.symbol }}<br>
+                {{ company.stockprice_set.last.last_traded_price|floatformat:2 }} ({{ company.stockprice_set.last.percentage_change_close|floatformat:2}}%)
+              </div>
+              <div class="stock-name" data-equalizer-watch="watchlist" style="margin-top:30px;">
+                {{ company.company_name }}
+              </div>
+              <div class="stock-day-range" style="margin-top:15px;">
+                <div class="row">
+                  <div class="large-6 columns">安値-高値</div>
+                  <div class="large-6 columns">{{ company.stockprice_set.last.low_price|floatformat:2 }} - {{ company.stockprice_set.last.high_price|floatformat:2 }}</div>
+                </div>
+              </div>
+              <div class="stock-volume">
+                <div class="row">
+                  <div class="large-6 columns">出来高</div>
+                  <div class="large-6 columns">{{ company.stockprice_set.last.total_volume|floatformat:0 }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+</div>
+
+<script>
+      
+
+    $( function() {
+
+    
+      $('#stock-search2').keyup(function() {
+        searchedstock = $('#stock-search2').val();
+        var res = searchedstock.split(", ");
+        $("#watchlistform").attr("action", "/market/" + res[0] + "/");
+
+      });
+
+
+      $('#stock-search2').bind("enterKey",function(e){
+        searchedstock = $('#stock-search2').val();
+        var res = searchedstock.split(", ");
+         console.log(searchedstock);
+         $("#watchlistform").attr("action", "/market/" + res[0] + "/");
+
+      });
+      $('#stock-search2').keyup(function(e){
+          if(e.keyCode == 13)
+          {
+              $(this).trigger("enterKey");
+          }
+      });
+
+
+
+
+      var availableTags = [
+"I, I-Remit, Inc.",
+"T, TKC Metals Corporation",
+"V, Vantage Equities, Inc.",
+"X, Xurpas Inc.",
+"AB, Atok-Big Wedge Co., Inc.",
+"AC, Ayala Corporation",
+"AP, Aboitiz Power Corporation",
+"AR, Abra Mining and Industrial Corporation",
+"AT, Atlas Consolidated Mining and Development Corporation",
+"BC, Benguet Corporation",
+"BH, BHI Holdings, Inc.",
+"CA, Concrete Aggregates Corporation",
+"DD, Doubledragon Properties Corp.",
+"EG, IP E-Game Ventures, Inc.",
+"EW, East West Banking Corporation",
+"HI, House of Investments, Inc.",
+"IS, Island Information & Technology, Inc.",
+"LC, Lepanto Consolidated Mining Company",
+"LR, Leisure & Resorts World Corporation",
+"MA, Manila Mining Corporation",
+"MB, Manila Bulletin Publishing Corporation",
+"MG, Millennium Global Holdings, Inc.",
+"NI, NiHAO Mineral Resources International, Inc.",
+"OM, Omico Corporation",
+"OV, The Philodrill Corporation",
+"PA, Pacifica, Inc.",
+"PF, San Miguel Pure Foods Company, Inc.",
+"PX, Philex Mining Corporation",
+"SM, SM Investments Corporation",
+"UW, Uniwide Holdings, Inc.",
+"IPO, iPeople, inc.",
+"2GO, 2GO Group, Inc.",
+"AAA, Asia Amalgamated Holdings Corporation",
+"ABA, AbaCore Capital Holdings, Inc.",
+"ABC, Allied Banking Corporation",
+"ABG, Asiabest Group International Inc.",
+"ABS, ABS-CBN Corporation",
+"ACE, Acesite (Phils.) Hotel Corporation",
+"ACR, Alsons Consolidated Resources, Inc.",
+"AEV, Aboitiz Equity Ventures, Inc.",
+"AGF, AG Finance, Incorporated",
+"AGI, Alliance Global Group, Inc.",
+"ALI, Ayala Land, Inc.",
+"ANI, AgriNurture, Inc.",
+"ANS, A. Soriano Corporation",
+"APC, APC Group, Inc.",
+"APO, Anglo Philippine Holdings Corporation",
+"APX, Apex Mining Co., Inc.",
+"ARA, Araneta Properties, Inc.",
+"ATI, Asian Terminals, Inc.",
+"ATN, ATN Holdings, Inc.",
+"AUB, Asia United Bank Corporation",
+"BCB, Benguet Corporation",
+"BCP, Benguet Corporation",
+"BDO, BDO Unibank, Inc.",
+"BEL, Belle Corporation",
+"BHI, Boulevard Holdings, Inc.",
+"BKR, Bright Kindle Resources & Investments Inc.",
+"BMM, Bogo Medellin Milling Company, Inc.",
+"BPI, Bank of the Philippine Islands",
+"BRN, A Brown Company, Inc.",
+"BSC, Basic Energy Corporation",
+"CAB, Concrete Aggregates Corporation",
+"CAL, Calata Corporation",
+"CAT, Central Azucarera de Tarlac, Inc.",
+"CDC, Cityland Development Corporation",
+"CEB, Cebu Air, Inc.",
+"CEI, Crown Equities, Inc.",
+"CEU, Centro Escolar University",
+"CHI, Cebu Holdings, Incorporated",
+"CHP, Cemex Holdings Philippines, Inc.",
+"CIC, Concepcion Industrial Corporation",
+"CIP, Chemical Industries of the Philippines, Inc.",
+"COL, COL Financial Group, Inc.",
+"CPG, Century Properties Group, Inc.",
+"CPM, Century Peak Metals Holdings Corporation",
+"CPV, Cebu Property Ventures and Development Corporation",
+"CSB, Citystate Savings Bank, Inc.",
+"DIZ, Dizon Copper-Silver Mines, Inc.",
+"DMC, DMCI Holdings, Inc.",
+"DNA, Philab Holdings Corp.",
+"DNL, D&L Industries, Inc.",
+"DWC, Discovery World Corporation",
+"ECP, EasyCall Communications Philippines, Inc.",
+"EDC, Energy Development Corporation",
+"EEI, EEI Corporation",
+"ELI, Empire East Land Holdings, Inc.",
+"EMP, Emperador Inc.",
+"FAF, First Abacus Financial Holdings Corporation",
+"FDC, Filinvest Development Corporation",
+"FEU, Far Eastern University, Incorporated",
+"FFI, Filipino Fund, Inc.",
+"FJP, F & J Prince Holdings Corporation",
+"FLI, Filinvest Land, Inc.",
+"FNI, Global Ferronickel Holdings, Inc.",
+"FPH, First Philippine Holdings Corporation",
+"FPI, Forum Pacific, Inc.",
+"FYN, Filsyn Corporation",
+"GEO, GEOGRACE Resources Philippines, Inc.",
+"GLO, Globe Telecom, Inc.",
+"GPH, Grand Plaza Hotel Corporation",
+"H2O, Philippine H2O Ventures Corp.",
+"HVN, Golden Haven Memorial Park, Inc.",
+"ICT, International Container Terminal Services, Inc.",
+"IDC, Italpinas Development Corporation",
+"IMI, Integrated Micro-Electronics, Inc.",
+"IMP, Imperial Resources, Inc.",
+"ION, Ionics, Inc.",
+"IPM, IPM Holdings, Inc..",
+"IRC, IRC Properties, Inc.",
+"ISM, ISM Communications Corporation",
+"JAS, Jackstones, Inc.",
+"JFC, Jollibee Foods Corporation",
+"JGS, JG Summit Holdings, Inc.",
+"JOH, Jolliville Holdings Corporation",
+"KEP, Keppel Philippines Properties, Inc.",
+"KPH, Keppel Philippines Holdings, Inc.",
+"LBC, LBC Express Holdings, Inc.",
+"LCB, Lepanto Consolidated Mining Company",
+"LFM, Liberty Flour Mills, Inc.",
+"LIB, Liberty Telecoms Holdings, Inc.",
+"LMG, LMG Chemicals Corporation",
+"LPZ, Lopez Holdings Corporation",
+"LRP, Leisure & Resorts World Corporation",
+"LRW, Leisure & Resorts World Corporation",
+"LSC, Lorenzo Shipping Corporation",
+"LTG, LT Group, Inc.",
+"MAB, Manila Mining Corporation",
+"MAC, MacroAsia Corporation",
+"MAH, Metro Alliance Holdings & Equities Corp.",
+"MBC, Manila Broadcasting Company",
+"MBT, Metropolitan Bank & Trust Company",
+"MCP, Melco Crown (Philippines) Resorts Corporation",
+"MED, MEDCO Holdings, Inc.",
+"MEG, Megaworld Corporation",
+"MER, Manila Electric Company",
+"MFC, Manulife Financial Corporation",
+"MGH, Metro Global Holdings Corporation",
+"MHC, Mabuhay Holdings Corporation",
+"MJC, Manila Jockey Club, Inc.",
+"MPI, Metro Pacific Investments Corporation",
+"MRC, MRC Allied, Inc.",
+"MVC, Mabuhay Vinyl Corporation",
+"MWC, Manila Water Company, Inc.",
+"MWP, Megawide Construction Corporation",
+"NOW, Now Corporation",
+"OPM, Oriental Petroleum and Minerals Corporation",
+"ORE, Oriental Peninsula Resources Group, Inc.",
+"PAL, PAL Holdings, Inc.",
+"PAX, Paxys, Inc.",
+"PBB, Philippine Business Bank",
+"PBC, Philippine Bank of Communications",
+"PCP, PICOP Resources, Inc.",
+"PFP, San Miguel Pure Foods Company, Inc.",
+"PHA, Premiere Horizon Alliance Corporation",
+"PHC, Philcomsat Holdings Corporation",
+"PHN, Phinma Corporation",
+"PIP, Pepsi-Cola Products Philippines, Inc.",
+"PLC, Premium Leisure Corp.",
+"PMT, Primetown Property Group, Inc.",
+"PNB, Philippine National Bank",
+"PNC, Philippine National Construction Corporation",
+"PNX, Phoenix Petroleum Philippines, Inc.",
+"PPC, Pryce Corporation",
+"PRC, Philippine Racing Club, Inc.",
+"PSB, Philippine Savings Bank",
+"PSE, The Philippine Stock Exchange, Inc.",
+"PTC, Philippine Trust Company",
+"PTT, Philippine Telegraph and Telephone Corporation",
+"PXP, PXP Energy Corporation",
+"RCB, Rizal Commercial Banking Corporation",
+"RCI, Roxas and Company, Inc.",
+"REG, Republic Glass Holdings Corporation",
+"RFM, RFM Corporation",
+"RLC, Robinsons Land Corporation",
+"RLT, Philippine Realty and Holdings Corporation",
+"ROX, Roxas Holdings, Inc.",
+"RWM, Travellers International Hotel Group, Inc.",
+"SBS, SBS Philippines Corporation",
+"SCC, Semirara Mining and Power Corporation",
+"SFI, Swift Foods, Inc.",
+"SGI, Solid Group, Inc.",
+"SGP, Synergy Grid & Development Phils., Inc.",
+"SLF, Sun Life Financial Inc.",
+"SLI, Sta. Lucia Land, Inc.",
+"SMC, San Miguel Corporation",
+"SOC, SOCResources, Inc.",
+"SPC, SPC Power Corporation",
+"SPH, Splash Corporation",
+"SPM, Seafront Resources Corporation",
+"SSI, SSI Group, Inc.",
+"STI, STI Education Systems Holdings, Inc.",
+"STN, Steniel Manufacturing Corporation",
+"STR, Starmalls, Inc.",
+"SUN, Suntrust Home Developers, Inc.",
+"TEL, PLDT Inc.",
+"TFC, PTFC Redevelopment Corporation",
+"UBP, Union Bank of the Philippines, Inc.",
+"UNI, Unioil Resources & Holdings Company, Inc.",
+"UPM, United Paragon Mining Corporation",
+"URC, Universal Robina Corporation",
+"VLL, Vista Land & Lifescapes, Inc.",
+"VMC, Victorias Milling Company, Inc.",
+"VUL, Vulcan Industrial & Mining Corporation",
+"VVT, Vivant Corporation",
+"WEB, PhilWeb Corporation",
+"WIN, Wellex Industries, Incorporated",
+"WPI, Waterfront Philippines, Incorporated",
+"ZHI, Zeus Holdings, Inc.",
+"ABSP, ABS-CBN Holdings Corporation",
+"ACPA, Ayala Corporation",
+"ALCO, Arthaland Corporation",
+"ALHI, Anchor Land Holdings, Inc.",
+"ATNB, ATN Holdings, Inc.",
+"BCOR, Berjaya Philippines Inc.",
+"BLFI, BDO Leasing and Finance, Inc.",
+"CHIB, China Banking Corporation",
+"CNPF, Century Pacific Food, Inc.",
+"COAL, Coal Asia Holdings Incorporated",
+"CPVB, Cebu Property Ventures and Development Corporation",
+"CYBR, Cyber Bay Corporation",
+"DDPR, Doubledragon Properties Corp.",
+"DFNN, DFNN, Inc.",
+"DMCP, DMCI Holdings, Inc.",
+"DMPL, Del Monte Pacific Limited",
+"EIBA, Export and Industry Bank, Inc.",
+"EIBB, Export and Industry Bank, Inc.",
+"EURO, Euro-Med Laboratories Phil., Inc.",
+"EVER, Ever-Gotesco Resources and Holdings, Inc.",
+"FGEN, First Gen Corporation",
+"FJPB, F & J Prince Holdings Corporation",
+"FOOD, Alliance Select Foods International, Inc.",
+"FPHP, First Philippine Holdings Corporation",
+"FYNB, Filsyn Corporation",
+"GERI, Global-Estate Resorts, Inc.",
+"GMA7, GMA Network, Inc.",
+"GMAP, GMA Holdings, Inc.",
+"GSMI, Ginebra San Miguel, Inc.",
+"HLCM, Holcim Philippines, Inc.",
+"IMPB, Imperial Resources, Inc.",
+"KPHB, Keppel Philippines Holdings, Inc.",
+"LAND, City & Land Developers, Incorporated",
+"LIHC, Lodestar Investment Holdings Corporation",
+"LOTO, Pacific Online Systems Corporation",
+"MAHB, Metro Alliance Holdings & Equities Corp.",
+"MARC, Marcventures Holdings, Inc.",
+"MAXS, Max's Group, Inc.",
+"MFIN, Makati Finance Corporation",
+"MJIC, MJC Investments Corporation",
+"NIKL, Nickel Asia Corporation",
+"NRCP, National Reinsurance Corporation of the Philippines",
+"OPMB, Oriental Petroleum and Minerals Corporation",
+"PCOR, Petron Corporation",
+"PERC, PetroEnergy Resources Corporation",
+"PFP2, San Miguel Pure Foods Company, Inc.",
+"PHEN, PHINMA Energy Corporation",
+"PHES, Philippine Estates Corporation",
+"PMPC, Panasonic Manufacturing Philippines Corporation",
+"PNXP, Phoenix Petroleum Philippines, Inc.",
+"POPI, Prime Orion Philippines, Inc.",
+"PORT, Globalport 900, Inc.",
+"PRIM, Prime Media Holdings, Inc.",
+"PRMX, Primex Corporation",
+"PSPC, Phoenix Semiconductor Philippines Corp.",
+"ROCK, Rockwell Land Corporation",
+"RRHI, Robinsons Retail Holdings, Inc.",
+"SECB, Security Bank Corporation",
+"SEVN, Philippine Seven Corporation",
+"SFIP, Swift Foods, Inc.",
+"SHNG, Shang Properties, Inc.",
+"SMPH, SM Prime Holdings, Inc.",
+"SRDC, Supercity Realty Development Corporation",
+"TBGI, Transpacific Broadband Group Int`l. Inc.",
+"TECH, Cirtek Holdings Philippines Corporation",
+"TFHI, Top Frontier Investment Holdings, Inc.",
+"TLII, PLDT Inc.",
+"TLJJ, PLDT Inc.",
+"TUGS, Harbor Star Shipping Services, Inc.",
+"VITA, Vitarich Corporation",
+"ACPB1, Ayala Corporation",
+"ACPB2, Ayala Corporation",
+"BLOOM, Bloomberry Resorts Corporation",
+"COSCO, Cosco Capital, Inc.",
+"CROWN, Crown Asia Chemicals Corporation",
+"DAVIN, Da Vinci Capital Holdings, Inc.",
+"FGENF, First Gen Corporation",
+"FGENG, First Gen Corporation",
+"FMETF, First Metro Philippine Equity Exchange Traded Fund, Inc.",
+"FPHPC, First Philippine Holdings Corporation",
+"GLOPA, Globe Telecom, Inc.",
+"GLOPP, Globe Telecom, Inc.",
+"GREEN, Greenergy Holdings Incorporated",
+"GTCAP, GT Capital Holdings, Inc.",
+"HOUSE, 8990 Holdings, Inc.",
+"MACAY, Macay Holdings, Inc.",
+"MRSGI, Metro Retail Stores Group, Inc.",
+"MWIDE, Megawide Construction Corporation",
+"NXGEN, NextGenesis Corporation",
+"PGOLD, Puregold Price Club, Inc.",
+"PNX3A, Phoenix Petroleum Philippines, Inc.",
+"PNX3B, Phoenix Petroleum Philippines, Inc.",
+"PRF2A, Petron Corporation",
+"PRF2B, Petron Corporation",
+"SMC2A, San Miguel Corporation",
+"SMC2B, San Miguel Corporation",
+"SMC2C, San Miguel Corporation",
+"SMC2D, San Miguel Corporation",
+"SMC2E, San Miguel Corporation",
+"SMC2F, San Miguel Corporation",
+"SMC2G, San Miguel Corporation",
+"SMC2H, San Miguel Corporation",
+"SMC2I, San Miguel Corporation",
+"SMCP1, San Miguel Corporation",
+"SHLPH, Pilipinas Shell Petroleum Corporation (SHLPH)",
+"TAPET, Trans-Asia Petroleum Corporation",
+"YEHEY, YEHEY! Corporation"
+
+    ];
+    $( "#stock-search2" ).autocomplete({
+      source: availableTags
+    });
+
+    
+    } );
+
+      </script>
+
+
+{% endblock %}
